@@ -188,10 +188,11 @@ static void lcd_begin(uint8_t clear)
 	lcd_escape[0] = 0;
 	#endif
 }
-
-static void lcd_putchar(char c, FILE *)
+/*RAMPS*/ //commit 2480bd9
+static int lcd_putchar(char c, FILE *)
 {
 	lcd_write(c);
+	return 0;
 }
 
 void lcd_init(void)

@@ -502,7 +502,17 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level);
 void gcode_M114();
 void gcode_M701();
 
-#define UVLO !(PINE & (1<<4))
+/*RAMPS*/
+#ifdef UVLO_ENABLE
+if (MOTHERBOARD == BOARD_RAMPS_14_EFB) 
+	{
+		#define UVLO !(PINE & (1<<4)) // Power panic - pin ZMAX on RAMPS
+	}
+	else
+	{
+		#define UVLO !(PINE & (1<<4))
+	}	
+#endif
 
 void proc_commands();
 

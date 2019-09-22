@@ -589,10 +589,14 @@ void fsensor_update(void)
 			fsensor_oq_meassure_enabled = oq_meassure_enabled_tmp;
 		}
 #else //PAT9125
+	/*RAMPS*/
+	#ifdef IR_SENSOR
 		if ((digitalRead(IR_SENSOR_PIN) == 1) && CHECK_FSENSOR && fsensor_enabled && ir_sensor_detected && ( ! fsensor_m600_enqueued) )
 		{
 			fsensor_stop_and_save_print();
 			fsensor_enque_M600();
 		}
+	#endif // IR_SENSOR
+	/*RAMPS*/
 #endif //PAT9125
 }

@@ -18,7 +18,8 @@ void __delay(void)
 {
 	_delay_us(1.5);
 }
-
+/*RAMPS*/
+#ifdef SWI2C
 void swi2c_init(void)
 {
 	PIN_OUT(SWI2C_SDA);
@@ -115,6 +116,7 @@ uint8_t swi2c_check(uint8_t dev_addr)
 	swi2c_stop();
 	return 1;
 }
+#endif//!SWI2C
 
 #ifdef SWI2C_A8 //8bit address
 

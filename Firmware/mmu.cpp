@@ -1068,7 +1068,8 @@ void mmu_filament_ramming()
 {
     for(uint8_t i = 0; i < (sizeof(ramming_sequence)/sizeof(E_step));++i)
     {
-        current_position[E_AXIS] += pgm_read_float(&(ramming_sequence[i].extrude));
+		/*RAMPS*/  //COMMENT AND DEBUG WHY IT'S NOT WORKING        
+		current_position[E_AXIS] += pgm_read_float(&(ramming_sequence[i].extrude));
         plan_buffer_line_curposXYZE(pgm_read_float(&(ramming_sequence[i].feed_rate)), active_extruder);
         st_synchronize();
     }

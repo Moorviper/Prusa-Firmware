@@ -519,8 +519,13 @@ void servo_init()
   #endif
 }
 
-
-bool fans_check_enabled = true;
+/*RAMPS*/
+#if defined(FANCHECK)
+	bool fans_check_enabled = true;
+#else
+	bool fans_check_enabled = false;
+#endif
+/*RAMPS*/
 
 #ifdef TMC2130
 
@@ -831,9 +836,9 @@ void show_fw_version_warnings() {
     lcd_update_enable(false);
     lcd_clear();
   #if FW_DEV_VERSION == FW_VERSION_DEVEL
-    lcd_puts_at_P(0, 0, PSTR("Development build !!"));
+    lcd_puts_at_P(0, 0, PSTR("Development build !")); /*RAMPS*/ //PSTR("Development build !!"));
   #else
-    lcd_puts_at_P(0, 0, PSTR("Debbugging build !!!"));
+    lcd_puts_at_P(0, 0, PSTR("Debbugging build !")); /*RAMPS*/ //PSTR("Debbugging build !!!"));
   #endif
     lcd_puts_at_P(0, 1, PSTR("May destroy printer!"));
     lcd_puts_at_P(0, 2, PSTR("ver ")); lcd_puts_P(PSTR(FW_VERSION_FULL));
@@ -989,7 +994,10 @@ static void w25x20cl_err_msg()
 // are initialized by the main() routine provided by the Arduino framework.
 void setup()
 {
-	mmu_init();
+	/*RAMPS*/ 
+	#if MOTHERBOARD != BOARD_RAMPS_14_EFB
+		mmu_init();
+	#endif
 
 	ultralcd_init();
 
@@ -997,7 +1005,10 @@ void setup()
 	analogWrite(LCD_BL_PIN, 255); //set full brightnes
 #endif //(LCD_BL_PIN != -1) && defined (LCD_BL_PIN)
 
+	/*RAMPS*/ 
+	#if MOTHERBOARD != BOARD_RAMPS_14_EFB
 	spi_init();
+	#endif
 
 	lcd_splash();
     Sound_Init();                                // also guarantee "SET_OUTPUT(BEEPER)"
@@ -1048,7 +1059,11 @@ void setup()
 #endif //FILAMENT_SENSOR
           // ~ FanCheck -> on
           if(!(eeprom_read_byte((uint8_t*)EEPROM_FAN_CHECK_ENABLED)))
-               eeprom_update_byte((unsigned char *)EEPROM_FAN_CHECK_ENABLED,true);
+			#if MOTHERBOARD == BOARD_RAMPS_14_EFB
+			  eeprom_update_byte((unsigned char *)EEPROM_FAN_CHECK_ENABLED, false);
+			#else
+			  eeprom_update_byte((unsigned char *)EEPROM_FAN_CHECK_ENABLED,true);
+			#endif
 	}
 	MYSERIAL.begin(BAUDRATE);
 	fdev_setup_stream(uartout, uart_putchar, NULL, _FDEV_SETUP_WRITE); //setup uart out stream
@@ -2860,7 +2875,8 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 #endif //TMC2130
 		enable_endstops(endstops_enabled);
 
-		if (st_get_position_mm(Z_AXIS) == MESH_HOME_Z_SEARCH)
+		if ((st_get_position_mm(Z_AXIS) <= (MESH_HOME_Z_SEARCH + HOME_Z_SEARCH_THRESHOLD)) &&
+		    (st_get_position_mm(Z_AXIS) >= (MESH_HOME_Z_SEARCH - HOME_Z_SEARCH_THRESHOLD)))
 		{
 			if (onlyZ)
 			{
@@ -3261,7 +3277,7 @@ static void gcode_PRUSA_SN()
 //! May be that's why the bad RAMBo's still produce some fan RPM reading, but not corresponding to reality
 static void gcode_PRUSA_BadRAMBoFanTest(){
     //printf_P(PSTR("Enter fan pin test\n"));
-#if !defined(DEBUG_DISABLE_FANCHECK) && defined(FANCHECK) && defined(TACH_1) && TACH_1 >-1 && defined(IR_SENSOR)
+#if !defined(DEBUG_DISABLE_FANCHECK) && defined(FANCHECK) && defined(TACH_1) && TACH_1 >-1
 	fan_measuring = false; // prevent EXTINT7 breaking into the measurement
 	unsigned long tach1max = 0;
 	uint8_t tach1cntr = 0;
@@ -10207,7 +10223,7 @@ void restore_print_from_ram_and_continue(float e_move)
 	else {
 		//not sd printing nor usb printing
 	}
-	printf_P(PSTR("ok\n")); //dummy response because of octoprint is waiting for this
+ 	SERIAL_PROTOCOLLNRPGM(MSG_OK); //dummy response because of octoprint is waiting for this
 	lcd_setstatuspgm(_T(WELCOME_MSG));
 	saved_printing = false;
 }
