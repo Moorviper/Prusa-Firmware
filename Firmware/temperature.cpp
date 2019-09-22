@@ -1057,7 +1057,12 @@ static void updateTemperaturesFromRawValues()
     #ifdef TEMP_SENSOR_1_AS_REDUNDANT
       redundant_temperature = analog2temp(redundant_temperature_raw, 1);
     #endif
-
+/*RAMPS*/
+//Reset the watchdog after we know we have a temperature measurement.
+#ifdef WATCHDOG
+    wdt_reset();
+#endif //WATCHDOG
+/*RAMPS*/
     CRITICAL_SECTION_START;
     temp_meas_ready = false;
     CRITICAL_SECTION_END;
@@ -1128,11 +1133,20 @@ void tp_init()
   #endif
 
   adc_init();
-
-  timer0_init();
+/*RAMPS*/
+#if (MOTHERBOARD == BOARD_RAMPS_14_EFB) && defined(SYSTEM_TIMER_2)
+  timer4_init();
+  OCR3B = 128;
+  TIMSK3 |= (1 << OCIE3B); 
+#elif (MOTHERBOARD == BOARD_RAMPS_14_EFB) && !defined(SYSTEM_TIMER_2)
+  OCR0B = 128;
+  TIMSK0 |= (1<<OCIE0B);  
+#else
+  timer0_init(); 
   OCR2B = 128;
-  TIMSK2 |= (1<<OCIE2B);  
-  
+  TIMSK2 |= (1 << OCIE2B); 
+#endif
+
   // Wait for temperature measurement to settle
   _delay(250);
 
@@ -1458,9 +1472,12 @@ void disable_heater()
     target_temperature_bed=0;
     soft_pwm_bed=0;
 	timer02_set_pwm0(soft_pwm_bed << 1);
-    #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-      //WRITE(HEATER_BED_PIN,LOW);
+	/*RAMPS*/
+	#if (MOTHERBOARD == BOARD_RAMPS_14_EFB) && !defined(SYSTEM_TIMER_2)
+	#if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
+      WRITE(HEATER_BED_PIN,LOW);
     #endif
+	#endif
   #endif 
 }
 //! codes of alert messages for the LCD - it is shorter to compare an uin8_t
@@ -1529,7 +1546,10 @@ void min_temp_error(uint8_t e) {
 
 void bed_max_temp_error(void) {
 #if HEATER_BED_PIN > -1
-  //WRITE(HEATER_BED_PIN, 0);
+/*RAMPS*/
+#if (MOTHERBOARD == BOARD_RAMPS_14_EFB) && !defined(SYSTEM_TIMER_2)
+	WRITE(HEATER_BED_PIN, 0);
+#endif
 #endif
   if(IsStopped() == false) {
     SERIAL_ERROR_START;
@@ -1548,7 +1568,10 @@ void bed_min_temp_error(void) {
 #endif
 //if (current_temperature_ambient < MINTEMP_MINAMBIENT) return;
 #if HEATER_BED_PIN > -1
-    //WRITE(HEATER_BED_PIN, 0);
+/*RAMPS*/
+#if (MOTHERBOARD == BOARD_RAMPS_14_EFB) && !defined(SYSTEM_TIMER_2)
+    WRITE(HEATER_BED_PIN, 0);
+#endif
 #endif
 	static const char err[] PROGMEM = "Err: MINTEMP BED";
     if(IsStopped() == false) {
@@ -1629,7 +1652,10 @@ extern "C" {
 void adc_ready(void) //callback from adc when sampling finished
 {
 	current_temperature_raw[0] = adc_values[ADC_PIN_IDX(TEMP_0_PIN)]; //heater
-	current_temperature_raw_pinda_fast = adc_values[ADC_PIN_IDX(TEMP_PINDA_PIN)];
+	/*RAMPS*/
+	#ifdef PINDA_THERMISTOR
+		current_temperature_raw_pinda_fast = adc_values[ADC_PIN_IDX(TEMP_PINDA_PIN)];
+	#endif
 	current_temperature_bed_raw = adc_values[ADC_PIN_IDX(TEMP_BED_PIN)];
 #ifdef VOLT_PWR_PIN
 	current_voltage_raw_pwr = adc_values[ADC_PIN_IDX(VOLT_PWR_PIN)];
@@ -1647,9 +1673,14 @@ void adc_ready(void) //callback from adc when sampling finished
 
 // Timer2 (originaly timer0) is shared with millies
 #ifdef SYSTEM_TIMER_2
-ISR(TIMER2_COMPB_vect)
+	/*t-RAMPS*/
+	#if MOTHERBOARD == BOARD_RAMPS_14_EFB
+		ISR(TIMER3_COMPB_vect)
+	#else
+		ISR(TIMER2_COMPB_vect)
+	#endif
 #else //SYSTEM_TIMER_2
-ISR(TIMER0_COMPB_vect)
+	ISR(TIMER0_COMPB_vect)
 #endif //SYSTEM_TIMER_2
 {
 	static bool _lock = false;
@@ -1682,7 +1713,11 @@ ISR(TIMER0_COMPB_vect)
 #endif 
 #endif
 #if HEATER_BED_PIN > -1
-  // @@DR static unsigned char soft_pwm_b;
+  /*RAMPS*/
+#if (MOTHERBOARD == BOARD_RAMPS_14_EFB) && !defined(SYSTEM_TIMER_2)
+  // @@DR 
+	static unsigned char soft_pwm_b;
+#endif
 #ifdef SLOW_PWM_HEATERS
   static unsigned char state_heater_b = 0;
   static unsigned char state_timer_heater_b = 0;
@@ -1717,22 +1752,24 @@ ISR(TIMER0_COMPB_vect)
 #endif
   }
 #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-  
-#if 0  // @@DR vypnuto pro hw pwm bedu
+/*RAMPS*/
+#if (MOTHERBOARD == BOARD_RAMPS_14_EFB) && !defined(SYSTEM_TIMER_2)
+//#if 0  // @@DR vypnuto pro hw pwm bedu
   // tuhle prasarnu bude potreba poustet ve stanovenych intervalech, jinak nemam moc sanci zareagovat
   // teoreticky by se tato cast uz vubec nemusela poustet
-  if ((pwm_count & ((1 << HEATER_BED_SOFT_PWM_BITS) - 1)) == 0)
-  {
-    soft_pwm_b = soft_pwm_bed >> (7 - HEATER_BED_SOFT_PWM_BITS);
+  //if ((pwm_count & ((1 << HEATER_BED_SOFT_PWM_BITS) - 1)) == 0) //zakomentiraj?
+  //{																//zakomentiraj?
+    //soft_pwm_b = soft_pwm_bed >> (7 - HEATER_BED_SOFT_PWM_BITS);
+    soft_pwm_b = soft_pwm_bed;
 #  ifndef SYSTEM_TIMER_2
 	// tady budu krokovat pomalou frekvenci na automatu - tohle je rizeni spinani a rozepinani
 	// jako ridici frekvenci mam 2khz, jako vystupni frekvenci mam 30hz
 	// 2kHz jsou ovsem ve slysitelnem pasmu, mozna bude potreba jit s frekvenci nahoru (a tomu taky prizpusobit ostatni veci)
 	// Teoreticky bych mohl stahnout OCR0B citac na 6, cimz bych se dostal nekam ke 40khz a tady potom honit PWM rychleji nebo i pomaleji
 	// to nicemu nevadi. Soft PWM scale by se 20x zvetsilo (no dobre, 16x), cimz by se to posunulo k puvodnimu 30Hz PWM
-	//if(soft_pwm_b > 0) WRITE(HEATER_BED_PIN,1); else WRITE(HEATER_BED_PIN,0);
+	if(soft_pwm_b > 0) WRITE(HEATER_BED_PIN,1); else WRITE(HEATER_BED_PIN,0);
 #  endif //SYSTEM_TIMER_2
-  }
+  //}																//zakomentiraj?
 #endif
 #endif
   
@@ -1758,12 +1795,17 @@ ISR(TIMER0_COMPB_vect)
   if(soft_pwm_2 < pwm_count) WRITE(HEATER_2_PIN,0);
 #endif
 
-#if 0 // @@DR  
+/*RAMPS*/
+#if (MOTHERBOARD == BOARD_RAMPS_14_EFB) && !defined(SYSTEM_TIMER_2)
+  //#if 0 // @@DR 
 #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
+  if (soft_pwm_b < pwm_count) WRITE(HEATER_BED_PIN, 0);
+  /*
   if (soft_pwm_b < (pwm_count & ((1 << HEATER_BED_SOFT_PWM_BITS) - 1))){
-	  //WRITE(HEATER_BED_PIN,0);
+	  WRITE(HEATER_BED_PIN,0);
   }
-  //WRITE(HEATER_BED_PIN, pwm_count & 1 );
+  WRITE(HEATER_BED_PIN, pwm_count & 1 );
+  */
 #endif
 #endif
 #ifdef FAN_SOFT_PWM
@@ -1961,7 +2003,7 @@ ISR(TIMER0_COMPB_vect)
   if (soft_pwm_fan < pwm_count) WRITE(FAN_PIN,0);
 #endif
 
-  pwm_count += (1 << SOFT_PWM_SCALE);
+  pwm_count += (1 << SOFT_PWM_SCALE);s
   pwm_count &= 0x7f;
   
   // increment slow_pwm_count only every 64 pwm_count circa 65.5ms

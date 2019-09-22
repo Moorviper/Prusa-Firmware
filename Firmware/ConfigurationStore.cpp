@@ -230,7 +230,7 @@ static const M500_conf default_conf PROGMEM =
 #ifdef TMC2130
     { TMC2130_USTEPS_XY, TMC2130_USTEPS_XY, TMC2130_USTEPS_Z, TMC2130_USTEPS_E },
 #else // TMC2130
-    {16,16,16,16},
+    {16,16,16,16},  /*RAMPS*/ // insert variables in Config._prusa.h, not fixed numbers!
 #endif
 };
 

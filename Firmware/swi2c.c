@@ -13,7 +13,8 @@
 #define SWI2C_ASHF   0x01 //address shift (<< 1)
 #define SWI2C_DMSK   0x7f //device address mask
 
-
+/*RAMPS*/
+#ifdef SWI2C
 void __delay(void)
 {
 	_delay_us(1.5);
@@ -115,6 +116,7 @@ uint8_t swi2c_check(uint8_t dev_addr)
 	swi2c_stop();
 	return 1;
 }
+#endif//!SWI2C
 
 #ifdef SWI2C_A8 //8bit address
 

@@ -10,7 +10,7 @@
 #include "Configuration.h"
 #include "pins.h"
 #include <binary.h>
-#include <Arduino.h>
+#include <Arduino.h> ///*RAMPS*/ - check if needed to be commented
 #include "Marlin.h"
 #include "fastio.h"
 //-//
@@ -189,9 +189,10 @@ static void lcd_begin(uint8_t clear)
 	#endif
 }
 
-static void lcd_putchar(char c, FILE *)
+static int lcd_putchar(char c, FILE *)
 {
 	lcd_write(c);
+	return 0;
 }
 
 void lcd_init(void)

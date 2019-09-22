@@ -845,7 +845,7 @@ void tmc2130_get_wave(uint8_t axis, uint8_t* data, FILE* stream)
 			if (mscnt == i)
 				fprintf_P(stream, PSTR("%d\t%d\n"), i, curA);
 			else //TODO - remove this check
-				fprintf_P(stream, PSTR("!! (i=%d MSCNT=%d)\n"), i, mscnt);
+				fprintf_P(stream, PSTR("! (i=%d MSCNT=%d)\n"), i, mscnt);
 		}
 		if (data) *(data++) = curA;
 		tmc2130_do_step(axis);
