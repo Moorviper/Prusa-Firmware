@@ -846,10 +846,12 @@ void show_fw_version_warnings() {
 	case(FW_VERSION_DEBUG):
     lcd_update_enable(false);
     lcd_clear();
+/*RAMPS*/
+// deleted double/tripple exclamation marks! (arduino compile error)
   #if FW_DEV_VERSION == FW_VERSION_DEVEL
-    lcd_puts_at_P(0, 0, PSTR("Development build !!"));
+    lcd_puts_at_P(0, 0, PSTR("Development build !"));
   #else
-    lcd_puts_at_P(0, 0, PSTR("Debbugging build !!!"));
+    lcd_puts_at_P(0, 0, PSTR("Debbugging build !"));
   #endif
     lcd_puts_at_P(0, 1, PSTR("May destroy printer!"));
     lcd_puts_at_P(0, 2, PSTR("ver ")); lcd_puts_P(PSTR(FW_VERSION_FULL));
@@ -1005,11 +1007,19 @@ static void w25x20cl_err_msg()
 // are initialized by the main() routine provided by the Arduino framework.
 void setup()
 {
-	mmu_init();
+	/*RAMPS*/
+	// disable MMU
+	#if MOTHERBOARD != BOARD_RAMPS_14_EFB
+		mmu_init();
+	#endif
 
 	ultralcd_init();
 
-	spi_init();
+	/*RAMPS*/
+	// disable SPI 
+	#if MOTHERBOARD != BOARD_RAMPS_14_EFB
+		spi_init();
+	#endif
 
 	lcd_splash();
     Sound_Init();                                // also guarantee "SET_OUTPUT(BEEPER)"
@@ -5852,7 +5862,7 @@ if(eSoundMode!=e_SOUND_MODE_SILENT)
 	### M46 - Show the assigned IP address <a href="https://reprap.org/wiki/G-code#M46:_Show_the_assigned_IP_address">M46: Show the assigned IP address.</a>
     */
     /*
-     case 46:
+    case 46:
     {
         // M46: Prusa3D: Show the assigned IP address.
         uint8_t ip[4];
@@ -6838,9 +6848,9 @@ Sigma_Exit:
       #if defined(X_MIN_PIN) && X_MIN_PIN > -1
         SERIAL_PROTOCOLRPGM(_n("x_min: "));////MSG_X_MIN
         if(READ(X_MIN_PIN)^X_MIN_ENDSTOP_INVERTING){
-          SERIAL_PROTOCOLRPGM(MSG_ENDSTOP_HIT);
+          SERIAL_PROTOCOLRPGM(MSG_ENDSTOP_HIT);     // TRIGGERED
         }else{
-          SERIAL_PROTOCOLRPGM(MSG_ENDSTOP_OPEN);
+          SERIAL_PROTOCOLRPGM(MSG_ENDSTOP_OPEN);    // open
         }
         SERIAL_PROTOCOLLN("");
       #endif

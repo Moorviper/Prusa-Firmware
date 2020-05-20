@@ -2563,6 +2563,7 @@ void lcd_generic_preheat_menu()
     }
     else
     {
+        MENU_ITEM_SUBMENU_P(PSTR("nozzle -  " STRINGIFY(PLA_PREHEAT_HOTEND_TEMP) "/0"), mFilamentItem_PLA);
         MENU_ITEM_SUBMENU_P(PSTR("PLA  -  " STRINGIFY(PLA_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PLA_PREHEAT_HPB_TEMP)),mFilamentItem_PLA);
         MENU_ITEM_SUBMENU_P(PSTR("PET  -  " STRINGIFY(PET_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PET_PREHEAT_HPB_TEMP)),mFilamentItem_PET);
         MENU_ITEM_SUBMENU_P(PSTR("ASA  -  " STRINGIFY(ASA_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(ASA_PREHEAT_HPB_TEMP)),mFilamentItem_ASA);
@@ -3515,7 +3516,19 @@ calibrated:
     // Let the machine think the Z axis is a bit higher than it is, so it will not home into the bed
     // during the search for the induction points.
 	if ((PRINTER_TYPE == PRINTER_MK25) || (PRINTER_TYPE == PRINTER_MK2) || (PRINTER_TYPE == PRINTER_MK2_SNMM)) {
-		current_position[Z_AXIS] = Z_MAX_POS-3.f;
+		/*RAMPS*/
+		if (MOTHERBOARD == BOARD_RAMPS_14_EFB) 
+		{
+						
+			// increase (+) to go lower, decrease (-) to go higher
+			current_position[Z_AXIS] = Z_MAX_POS + 0.f;
+		}
+
+		else 
+		{
+			current_position[Z_AXIS] = Z_MAX_POS-3.f;
+		}
+		/*RAMPS*/
 	}
 	else {
 		current_position[Z_AXIS] = Z_MAX_POS+4.f;
@@ -4864,7 +4877,7 @@ void lcd_wizard() {
 		result = lcd_show_multiscreen_message_yes_no_and_wait_P(_i("Running Wizard will delete current calibration results and start from the beginning. Continue?"), false, false);////MSG_WIZARD_RERUN c=20 r=7
 	}
 	if (result) {
-		calibration_status_store(CALIBRATION_STATUS_ASSEMBLED);
+        calibration_status_store(CALIBRATION_STATUS_ASSEMBLED);
 		lcd_wizard(WizState::Run);
 	}
 	else {
@@ -5043,7 +5056,32 @@ void lcd_wizard(WizState state)
 			}
 			break; 
 		case S::Selftest:
-			lcd_show_fullscreen_message_and_wait_P(_i("First, I will run the selftest to check most common assembly problems."));////MSG_WIZARD_SELFTEST c=20 r=8
+            #if (0) //MOTHERBOARD == BOARD_RAMPS_14_EFB
+                // FACTORY RESET
+                lcd_clear();
+                lcd_puts_P(PSTR("Factory RESET"));
+                lcd_puts_at_P(1, 2, PSTR("ERASING all data"));
+
+                Sound_MakeCustom(100, 0, false);
+                int  er_progress = 0;
+                lcd_puts_at_P(3, 3, PSTR("      "));
+                lcd_set_cursor(3, 3);
+                lcd_print(er_progress);
+
+                // Erase EEPROM
+                for (int i = 0; i < 4096; i++) {
+                    eeprom_update_byte((uint8_t*)i, 0xFF);
+
+                    if (i % 41 == 0) {
+                        er_progress++;
+                        lcd_puts_at_P(3, 3, PSTR("      "));
+                        lcd_set_cursor(3, 3);
+                        lcd_print(er_progress);
+                        lcd_puts_P(PSTR("%"));
+                    }
+                }
+            #endif
+            lcd_show_fullscreen_message_and_wait_P(_i("First, I will run the selftest to check most common assembly problems."));////MSG_WIZARD_SELFTEST c=20 r=8
 			wizard_event = lcd_selftest();
 			if (wizard_event) {
 				calibration_status_store(CALIBRATION_STATUS_XYZ_CALIBRATION);
@@ -5059,10 +5097,16 @@ void lcd_wizard(WizState state)
 			break;
 		case S::Z:
 			lcd_show_fullscreen_message_and_wait_P(_i("Please remove shipping helpers first."));
-			lcd_show_fullscreen_message_and_wait_P(_i("Now remove the test print from steel sheet."));
-			lcd_show_fullscreen_message_and_wait_P(_i("I will run z calibration now."));////MSG_WIZARD_Z_CAL c=20 r=8
-			wizard_event = lcd_show_fullscreen_message_yes_no_and_wait_P(_T(MSG_STEEL_SHEET_CHECK), false, false);
-			if (!wizard_event) lcd_show_fullscreen_message_and_wait_P(_T(MSG_PLACE_STEEL_SHEET));
+            #ifdef STEEL_SHEET
+                lcd_show_fullscreen_message_and_wait_P(_i("Now remove the test print from steel sheet."));
+            #else
+                lcd_show_fullscreen_message_and_wait_P(_i("Now remove the test print from the heatbed."));
+            #endif
+            lcd_show_fullscreen_message_and_wait_P(_i("I will run z calibration now."));////MSG_WIZARD_Z_CAL c=20 r=8
+            #ifdef STEEL_SHEET
+                wizard_event = lcd_show_fullscreen_message_yes_no_and_wait_P(_T(MSG_STEEL_SHEET_CHECK), false, false);
+			    if (!wizard_event) lcd_show_fullscreen_message_and_wait_P(_T(MSG_PLACE_STEEL_SHEET));
+            #endif // STEEL_SHEET
 			wizard_event = gcode_M45(true, 0);
 			if (wizard_event) {
 				//current filament needs to be unloaded and then new filament should be loaded
@@ -5130,7 +5174,9 @@ void lcd_wizard(WizState state)
 			}
 			else
 			{
-			    lcd_show_fullscreen_message_and_wait_P(_i("If you have additional steel sheets, calibrate their presets in Settings - HW Setup - Steel sheets."));
+                #ifdef STEEL_SHEET
+                    lcd_show_fullscreen_message_and_wait_P(_i("If you have additional steel sheets, calibrate their presets in Settings - HW Setup - Steel sheets."));
+                #endif // STEEL_SHEET
 				state = S::Finish;
 			}
 			break;
@@ -5327,29 +5373,31 @@ do\
 while (0)
 
 #else //TMC2130
-#define SETTINGS_SILENT_MODE \
-do\
-{\
-    if(!farm_mode)\
-    {\
-        switch (SilentModeMenu)\
+    #if MOTHERBOARD != BOARD_RAMPS_14_EFB
+        #define SETTINGS_SILENT_MODE \
+        do\
         {\
-        case SILENT_MODE_POWER:\
-            MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_HIGH_POWER), lcd_silent_mode_set);\
-            break;\
-        case SILENT_MODE_SILENT:\
-            MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_SILENT), lcd_silent_mode_set);\
-            break;\
-        case SILENT_MODE_AUTO:\
-            MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_AUTO_POWER), lcd_silent_mode_set);\
-            break;\
-        default:\
-            MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_HIGH_POWER), lcd_silent_mode_set);\
-            break; /* (probably) not needed*/\
+            if(!farm_mode)\
+            {\
+                switch (SilentModeMenu)\
+                {\
+                case SILENT_MODE_POWER:\
+                    MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_HIGH_POWER), lcd_silent_mode_set);\
+                    break;\
+                case SILENT_MODE_SILENT:\
+                    MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_SILENT), lcd_silent_mode_set);\
+                    break;\
+                case SILENT_MODE_AUTO:\
+                    MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_AUTO_POWER), lcd_silent_mode_set);\
+                    break;\
+                default:\
+                    MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_HIGH_POWER), lcd_silent_mode_set);\
+                    break; /* (probably) not needed*/\
+                }\
+            }\
         }\
-    }\
-}\
-while (0)
+        while (0)
+    #endif
 #endif //TMC2130
 
 #ifndef MMU_FORCE_STEALTH_MODE
@@ -5718,8 +5766,11 @@ void lcd_hw_setup_menu(void)                      // can not be "static"
 {
     MENU_BEGIN();
     MENU_ITEM_BACK_P(_T(bSettings?MSG_SETTINGS:MSG_BACK)); // i.e. default menu-item / menu-item after checking mismatch
-
-    MENU_ITEM_SUBMENU_P(_i("Steel sheets"), sheets_menu); ////MSG_STEEL_SHEETS c=18
+    #ifdef STEEL_SHEET
+        MENU_ITEM_SUBMENU_P(_i("Steel sheets"), sheets_menu); ////MSG_STEEL_SHEETS c=18
+    #else
+        MENU_ITEM_SUBMENU_P(_i("Live Z presets"), sheets_menu); ////MSG_STEEL_SHEETS c=18
+    #endif // STEEL_SHEET
     SETTINGS_NOZZLE;
     MENU_ITEM_SUBMENU_P(_i("Checks"), lcd_checking_menu);
 
@@ -5748,9 +5799,17 @@ static void lcd_settings_menu()
 
 	SETTINGS_CUTTER;
 
-	MENU_ITEM_TOGGLE_P(_i("Fans check"), fans_check_enabled ? _T(MSG_ON) : _T(MSG_OFF), lcd_set_fan_check);
+#ifdef FANCHECK
+    #if (MOTHERBOARD != BOARD_RAMPS_14_EFB)
+	    MENU_ITEM_TOGGLE_P(_i("Fans check"), fans_check_enabled ? _T(MSG_ON) : _T(MSG_OFF), lcd_set_fan_check);
+    #else
+        lcd_set_fan_check(); // Turn Fans check [OFF] for Ramps!
+    #endif
+#endif
 
-	SETTINGS_SILENT_MODE;
+    #if MOTHERBOARD != BOARD_RAMPS_14_EFB
+        SETTINGS_SILENT_MODE;
+    #endif
 
     if(!farm_mode)
     {
@@ -6801,7 +6860,12 @@ static void activate_calibrate_sheet()
 static void lcd_sheet_menu()
 {
     MENU_BEGIN();
-    MENU_ITEM_BACK_P(_i("Steel sheets")); ////MSG_STEEL_SHEETS c=18
+    #ifdef STEEL_SHEET
+        MENU_ITEM_BACK_P(_i("Steel sheets")); ////MSG_STEEL_SHEETS c=18
+    #else
+        MENU_ITEM_BACK_P(_i("Live Z presets")); ////MSG_STEEL_SHEETS c=18
+    #endif // STEEL_SHEET
+
 
 	if(eeprom_is_sheet_initialized(selected_sheet)){
 	    MENU_ITEM_SUBMENU_P(_i("Select"), change_sheet); //// c=18
@@ -6909,7 +6973,9 @@ static void lcd_main_menu()
   {
     bMain=true;                                   // flag (i.e. 'fake parameter') for 'lcd_sdcard_menu()' function
     MENU_ITEM_SUBMENU_P(_i("No SD card"), lcd_sdcard_menu);////MSG_NO_CARD
-#if SDCARDDETECT < 1
+/*RAMPS*/
+//#if SDCARDDETECT < 1
+#if ((SDCARDDETECT < 1) || (MOTHERBOARD == BOARD_RAMPS_14_EFB))
     MENU_ITEM_GCODE_P(_i("Init. SD card"), PSTR("M21")); // Manually initialize the SD-card via user interface////MSG_INIT_SDCARD
 #endif
   }
@@ -7172,7 +7238,8 @@ static void lcd_tune_menu()
           else MENU_ITEM_TOGGLE_P(_T(MSG_CRASHDETECT), NULL, lcd_crash_mode_info);
      }
 #else //TMC2130
-	if (!farm_mode) { //dont show in menu if we are in farm mode
+    #if MOTHERBOARD != BOARD_RAMPS_14_EFB
+     if (!farm_mode) { //dont show in menu if we are in farm mode
 		switch (SilentModeMenu) {
 		case SILENT_MODE_POWER: MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_HIGH_POWER), lcd_silent_mode_set); break;
 		case SILENT_MODE_SILENT: MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_SILENT), lcd_silent_mode_set); break;
@@ -7180,6 +7247,7 @@ static void lcd_tune_menu()
 		default: MENU_ITEM_TOGGLE_P(_T(MSG_MODE), _T(MSG_HIGH_POWER), lcd_silent_mode_set); break; // (probably) not needed
 		}
 	}
+    #endif
 #endif //TMC2130
 	SETTINGS_MMU_MODE;
     SETTINGS_SOUND;
@@ -7651,7 +7719,7 @@ bool lcd_selftest()
 	if (_result)
 	{
 		_progress = lcd_selftest_screen(TestScreen::FansOk, _progress, 3, true, 2000);
-		_result = lcd_selfcheck_endstops(); //With TMC2130, only the Z probe is tested.
+        _result = lcd_selfcheck_endstops(); //With TMC2130, only the Z probe is tested.
 	}
 
 	if (_result)
@@ -7673,7 +7741,7 @@ bool lcd_selftest()
 		_progress = lcd_selftest_screen(TestScreen::AxisX, _progress, 3, true, 0);
 
 #ifndef TMC2130
-		_result = lcd_selfcheck_pulleys(X_AXIS);
+        _result = lcd_selfcheck_pulleys(X_AXIS);
 #endif
 	}
 
@@ -7954,7 +8022,7 @@ static bool lcd_selfcheck_axis_sg(unsigned char axis) {
 
 static bool lcd_selfcheck_axis(int _axis, int _travel)
 {
-//	printf_P(PSTR("lcd_selfcheck_axis %d, %d\n"), _axis, _travel);
+	printf_P(PSTR("lcd_selfcheck_axis %d, %d\n"), _axis, _travel);
 	bool _stepdone = false;
 	bool _stepresult = false;
 	int _progress = 0;
@@ -7967,6 +8035,13 @@ static bool lcd_selfcheck_axis(int _axis, int _travel)
 		current_position[Z_AXIS] += 17;
 		plan_buffer_line_curposXYZE(manual_feedrate[0] / 60, active_extruder);
 	}
+
+    #ifdef Y_COMPENSATION_FOR_CALIBRATION
+    if (_axis == Z_AXIS) {
+        current_position[Y_AXIS] += 3;
+        plan_buffer_line_curposXYZE(manual_feedrate[0] / 60, active_extruder);
+    }
+    #endif // Y_COMPENSATION_FOR_CALIBRATION
 
 	do {
 		current_position[_axis] = current_position[_axis] - 1;
@@ -8312,14 +8387,14 @@ static void lcd_selftest_error(TestError testError, const char *_error_1, const 
 		lcd_set_cursor(18, 3);
 		lcd_print(_error_1);
 		break;
-	case TestError::Pulley:
-		lcd_set_cursor(0, 2);
-		lcd_puts_P(_i("Loose pulley"));////MSG_LOOSE_PULLEY c=20 r=1
-		lcd_set_cursor(0, 3);
-		lcd_puts_P(_T(MSG_SELFTEST_MOTOR));
-		lcd_set_cursor(18, 3);
-		lcd_print(_error_1);
-		break;
+    case TestError::Pulley:
+        lcd_set_cursor(0, 2);
+        lcd_puts_P(_i("Loose pulley"));////MSG_LOOSE_PULLEY c=20 r=1
+        lcd_set_cursor(0, 3);
+        lcd_puts_P(_T(MSG_SELFTEST_MOTOR));
+        lcd_set_cursor(18, 3);
+        lcd_print(_error_1);
+        break;
 	case TestError::Axis:
 		lcd_set_cursor(0, 2);
 		lcd_puts_P(_i("Axis length"));////MSG_SELFTEST_AXIS_LENGTH
