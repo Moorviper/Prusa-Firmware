@@ -130,15 +130,15 @@ void eeprom_default_sheet_name(uint8_t index, SheetName &sheetName)
     #else
         if (index < 2)
         {
-            strcpy_P(sheetName.c, PSTR("PLA"));
+            strcpy_P(sheetName.c, PSTR("PLA   "));
         }
         else if (index < 4)
         {
-            strcpy_P(sheetName.c, PSTR("PET"));
+            strcpy_P(sheetName.c, PSTR("PET   "));
         }
         else
         {
-            strcpy_P(sheetName.c, PSTR("Other"));
+            strcpy_P(sheetName.c, PSTR("Other "));
         }
     #endif // STEEL_SHEET
 

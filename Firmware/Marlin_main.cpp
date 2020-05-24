@@ -526,8 +526,11 @@ void servo_init()
   #endif
 }
 
-
-bool fans_check_enabled = true;
+#ifdef FANCHECK
+    bool fans_check_enabled = true;
+#else
+    bool fans_check_enabled = false;
+#endif
 
 #ifdef TMC2130
 
@@ -658,7 +661,7 @@ void failstats_reset_print()
 
 
 // Factory reset function
-// This function is used to erase parts or whole EEPROM memory which is used for storing calibration and and so on.
+// This function is used to erase parts or whole EEPROM memory which is used for storing calibration and so on.
 // Level input parameter sets depth of reset
 int  er_progress = 0;
 static void factory_reset(char level)
@@ -753,8 +756,15 @@ static void factory_reset(char level)
 
 			// Erase EEPROM
 			for (int i = 0; i < 4096; i++) {
-				eeprom_update_byte((uint8_t*)i, 0xFF);
-
+                /*RAMPS*/
+                // erase everything except:
+                if (i < 4077 || i > 4084)
+                {
+                    // | 0x0FF1h 4081 | uint32 | EEPROM_FILAMENTUSED
+                    // | 0x0FEDh 4077 | uint32 | EEPROM_TOTALTIME
+                    eeprom_update_byte((uint8_t*)i, 0xFF);
+                }
+                /*RAMPS*/
 				if (i % 41 == 0) {
 					er_progress++;
 					lcd_puts_at_P(3, 3, PSTR("      "));
@@ -765,7 +775,6 @@ static void factory_reset(char level)
 
 			}
 
-
 			break;
 		case 4:
 			bowden_menu();
@@ -774,8 +783,6 @@ static void factory_reset(char level)
         default:
             break;
     }
-    
-
 }
 
 extern "C" {
@@ -1260,7 +1267,8 @@ void setup()
 	plan_init();  // Initialize planner;
 
 	factory_reset();
-	if (eeprom_read_dword((uint32_t*)(EEPROM_TOP - 4)) == 0x0ffffffff &&
+
+    if (eeprom_read_dword((uint32_t*)(EEPROM_TOP - 4)) == 0x0ffffffff &&
 	        eeprom_read_dword((uint32_t*)(EEPROM_TOP - 8)) == 0x0ffffffff)
 	{
         // Maiden startup. The firmware has been loaded and first started on a virgin RAMBo board,
@@ -1268,10 +1276,10 @@ void setup()
         // Once a firmware boots up, it forces at least a language selection, which changes
         // EEPROM_LANG to number lower than 0x0ff.
         // 1) Set a high power mode.
-	    eeprom_update_byte((uint8_t*)EEPROM_SILENT, SILENT_MODE_OFF);
-#ifdef TMC2130
-        tmc2130_mode = TMC2130_MODE_NORMAL;
-#endif //TMC2130
+        eeprom_update_byte((uint8_t*)EEPROM_SILENT, SILENT_MODE_OFF);
+        #ifdef TMC2130
+            tmc2130_mode = TMC2130_MODE_NORMAL;
+        #endif //TMC2130
         eeprom_write_byte((uint8_t*)EEPROM_WIZARD_ACTIVE, 1); //run wizard
     }
 
@@ -7650,6 +7658,10 @@ Sigma_Exit:
       if (code_seen('S')) temp=code_value();
       if (code_seen('C')) c=code_value();
       PID_autotune(temp, e, c);
+      /*RAMPS*/
+	  // turn off heatbed and hotend
+      enquecommand_P(PSTR("M104 S0"));
+      enquecommand_P(PSTR("M140 S0"));
     }
     break;
     
@@ -9629,7 +9641,7 @@ if(0)
     // ----------------------------------------------------------------
     if ( killCount >= KILL_DELAY)
     {
-       kill(NULL, 5);
+        kill(NULL, 5);
     }
   #endif
     

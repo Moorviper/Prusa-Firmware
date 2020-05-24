@@ -2563,7 +2563,7 @@ void lcd_generic_preheat_menu()
     }
     else
     {
-        MENU_ITEM_SUBMENU_P(PSTR("nozzle -  " STRINGIFY(PLA_PREHEAT_HOTEND_TEMP) "/0"), mFilamentItem_PLA);
+        MENU_ITEM_SUBMENU_P(PSTR("nozzle -  " STRINGIFY(PLA_PREHEAT_HOTEND_TEMP) "/0"), mFilamentItem_farm_nozzle);
         MENU_ITEM_SUBMENU_P(PSTR("PLA  -  " STRINGIFY(PLA_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PLA_PREHEAT_HPB_TEMP)),mFilamentItem_PLA);
         MENU_ITEM_SUBMENU_P(PSTR("PET  -  " STRINGIFY(PET_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PET_PREHEAT_HPB_TEMP)),mFilamentItem_PET);
         MENU_ITEM_SUBMENU_P(PSTR("ASA  -  " STRINGIFY(ASA_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(ASA_PREHEAT_HPB_TEMP)),mFilamentItem_ASA);
@@ -5037,7 +5037,7 @@ void lcd_wizard(WizState state)
 			
 			wizard_event = lcd_show_multiscreen_message_yes_no_and_wait_P(_i("Hi, I am your Original Prusa i3 printer. Would you like me to guide you through the setup process?"), false, true);////MSG_WIZARD_WELCOME c=20 r=7
 			if (wizard_event) {
-				state = S::Restore;
+                state = S::Restore;
 				eeprom_update_byte((uint8_t*)EEPROM_WIZARD_ACTIVE, 1);
 			}
 			else {
@@ -5056,31 +5056,34 @@ void lcd_wizard(WizState state)
 			}
 			break; 
 		case S::Selftest:
+            /*RAMPS*/
             #if (0) //MOTHERBOARD == BOARD_RAMPS_14_EFB
-                // FACTORY RESET
-                lcd_clear();
-                lcd_puts_P(PSTR("Factory RESET"));
-                lcd_puts_at_P(1, 2, PSTR("ERASING all data"));
-
-                Sound_MakeCustom(100, 0, false);
-                int  er_progress = 0;
-                lcd_puts_at_P(3, 3, PSTR("      "));
-                lcd_set_cursor(3, 3);
-                lcd_print(er_progress);
-
-                // Erase EEPROM
-                for (int i = 0; i < 4096; i++) {
+            int  er_progress = 0;
+            for (int i = 0; i < 4096; i++) {
+                /*RAMPS*/
+                // fully erase everything except:
+                // | 0x0FF1h 4081 | uint32 | EEPROM_FILAMENTUSED
+                // | 0x0FEDh 4077 | uint32 | EEPROM_TOTALTIME
+                if (i < 4077 || i > 4084)
+                {
                     eeprom_update_byte((uint8_t*)i, 0xFF);
-
-                    if (i % 41 == 0) {
-                        er_progress++;
-                        lcd_puts_at_P(3, 3, PSTR("      "));
-                        lcd_set_cursor(3, 3);
-                        lcd_print(er_progress);
-                        lcd_puts_P(PSTR("%"));
-                    }
                 }
-            #endif
+                //eeprom_update_byte((uint8_t*)i, 0xFF);
+                /*RAMPS*/
+                if (i % 41 == 0) {
+                    er_progress++;
+                    lcd_puts_at_P(3, 3, PSTR("      "));
+                    lcd_set_cursor(3, 3);
+                    lcd_print(er_progress);
+                    lcd_puts_P(PSTR("%"));
+                }
+            }
+            _delay_ms(0);
+            KEEPALIVE_STATE(IN_HANDLER);
+            eeprom_init();
+            mbl_settings_init();
+            #endif /*RAMPS*/
+
             lcd_show_fullscreen_message_and_wait_P(_i("First, I will run the selftest to check most common assembly problems."));////MSG_WIZARD_SELFTEST c=20 r=8
 			wizard_event = lcd_selftest();
 			if (wizard_event) {

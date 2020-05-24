@@ -7,7 +7,7 @@
 
 /*RAMPS*/
 #if MOTHERBOARD != BOARD_RAMPS_14_EFB
-#define SYSTEM_TIMER_2
+	#define SYSTEM_TIMER_2
 #endif
 
 #ifdef SYSTEM_TIMER_2
