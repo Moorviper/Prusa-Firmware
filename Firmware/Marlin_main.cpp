@@ -745,6 +745,9 @@ static void factory_reset(char level)
 			// Level 3: erase everything, whole EEPROM will be set to 0xFF
 
 		case 3:
+        #ifndef SNMM
+        case 4:
+        #endif
 			lcd_puts_P(PSTR("Factory RESET"));
 			lcd_puts_at_P(1, 2, PSTR("ERASING all data"));
 
@@ -757,14 +760,18 @@ static void factory_reset(char level)
 			// Erase EEPROM
 			for (int i = 0; i < 4096; i++) {
                 /*RAMPS*/
-                // erase everything except:
-                if (i < 4077 || i > 4084)
-                {
-                    // | 0x0FF1h 4081 | uint32 | EEPROM_FILAMENTUSED
-                    // | 0x0FEDh 4077 | uint32 | EEPROM_TOTALTIME
-                    eeprom_update_byte((uint8_t*)i, 0xFF);
+                if (level == 4) {
+                    // erase everything except data on filament used and total printing time
+                    if (i < EEPROM_TOTALTIME || i >= EEPROM_BABYSTEP_Z0)
+                    {
+                        // | 0x0FF5h 4085 | uint16 | EEPROM_BABYSTEP_Z0
+                        // | 0x0FF1h 4081 | uint32 | EEPROM_FILAMENTUSED
+                        // | 0x0FEDh 4077 | uint32 | EEPROM_TOTALTIME
+                        eeprom_update_byte((uint8_t*)i, 0xFF);
+                    }
                 }
-                /*RAMPS*/
+                    /*RAMPS*/
+
 				if (i % 41 == 0) {
 					er_progress++;
 					lcd_puts_at_P(3, 3, PSTR("      "));
@@ -774,12 +781,13 @@ static void factory_reset(char level)
 				}
 
 			}
-
 			break;
-		case 4:
+
+        #ifdef SNMM
+        case 4:
 			bowden_menu();
 			break;
-        
+        #endif
         default:
             break;
     }

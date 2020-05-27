@@ -6217,7 +6217,9 @@ char reset_menu() {
 #ifdef SNMM
 	int items_no = 5;
 #else
-	int items_no = 4;
+    /*RAMPS*/
+    //int items_no = 4;
+    int items_no = 5;
 #endif
 	static int first = 0;
 	int enc_dif = 0;
@@ -6230,6 +6232,9 @@ char reset_menu() {
 	item[3] = "All Data";
 #ifdef SNMM
 	item[4] = "Bowden length";
+#else
+    /*RAMPS*/
+    item[4] = "All but statistics";  // erase all data when upgrading, but keep statistics (filament used, total print time)
 #endif // SNMM
 
 	enc_dif = lcd_encoder_diff;
