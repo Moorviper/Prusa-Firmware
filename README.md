@@ -167,7 +167,7 @@ Before compiling, be sure you have modified the file `platform.txt`.
 
     For example:  `"compiler.c.elf.flags={compiler.warning_flags} -Os -g -flto -fuse-linker-plugin -Wl,-u,vfprintf -lprintf_flt -lm -Wl,--gc-sections"`
 
-Before making the inital Wizard calibration, it is mandatory to do a **full factory reset to erase all eeprom and flash data!**
+Before making the inital Wizard calibration, it is mandatory to do a **full factory reset to erase all eeprom data!**
 
 1. Press and hold the control knob
 2. Power up the printer by turning the PSU switch on
