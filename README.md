@@ -161,9 +161,9 @@ If your setup is different than mine you have to modify parameters and values to
 Firmware was successfully compiled and tested with Arduino 1.8.5.
 Before compiling, be sure you have modified the file `platform.txt`.
      
-* The `platform.txt` file can be found in Arduino instalation directory (`"C:\Program Files (x86)\Arduino\hardware\arduino\avr"`), or after Arduino has been updated at: `"C:\Users\(user)\AppData\Local\Arduino15\packages\arduino\hardware\avr\(version)"` If you can locate the file in both places, file from user profile is probably used.
+* The `platform.txt` file can be found in Arduino instalation directory (`"C:\Program Files (x86)\Arduino\hardware\arduino\avr"`), or after Arduino has been updated at: `"C:\Users\(user)\AppData\Local\Arduino15\packages\arduino\hardware\avr\(version)"`. If you can locate the file in both places, file from user profile is probably used.
        
-* Add `"-Wl,-u,vfprintf -lprintf_flt -lm"` to `"compiler.c.elf.flags="` before existing flag "-Wl,--gc-sections"  
+* Add `"-Wl,-u,vfprintf -lprintf_flt -lm"` to `"compiler.c.elf.flags="` before existing flag `"-Wl,--gc-sections"`  
 
     For example:  `"compiler.c.elf.flags={compiler.warning_flags} -Os -g -flto -fuse-linker-plugin -Wl,-u,vfprintf -lprintf_flt -lm -Wl,--gc-sections"`
 
