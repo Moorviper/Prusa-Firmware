@@ -7643,11 +7643,19 @@ static void lcd_selftest_v()
 	(void)lcd_selftest();
 }
 
+void gcode_G28(bool home_x_axis, long home_x_value, bool home_y_axis, long home_y_value, bool home_z_axis, long home_z_value, bool without_mbl);
+
 bool lcd_selftest()
 {
 	int _progress = 0;
 	bool _result = true;
 	bool _swapped_fan = false;
+    /*RAMPS*/
+    if ((X_MIN_ENDSTOP_INVERTING == 1) || (Y_MIN_ENDSTOP_INVERTING == 1) || (Z_MIN_ENDSTOP_INVERTING == 1))
+    {
+        gcode_G28(true, 0, true, 0, true, 0, true);
+    }
+    /*RAMPS*/
 #ifdef IR_SENSOR_ANALOG
 	//!   Check if IR sensor is in unknown state, set it temporarily to 0.3 or older
 	//! @todo This has to be improved

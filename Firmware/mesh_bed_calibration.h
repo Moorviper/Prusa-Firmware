@@ -17,7 +17,7 @@
 	#define BED_Y0 (8.4f - BED_ZERO_REF_Y)	//8.4 - 6.4 = 2
 	#define BED_Xn (216.f - BED_ZERO_REF_X) //216 - 1 = 215
 	#define BED_Yn (204.4f - BED_ZERO_REF_Y)//204.4 - 6.4 = 198 
-#elif HEATBED_V2
+#elif defined(HEATBED_V2)
 	#define BED_X0 (2.f - BED_ZERO_REF_X) //1
 	#define BED_Y0 (9.4f - BED_ZERO_REF_Y) //1
 	#define BED_Xn (206.f - BED_ZERO_REF_X) //205

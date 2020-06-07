@@ -218,7 +218,7 @@ bool checkAllHotends(void)
     return(result);
 }
 
-  void PID_autotune(float temp, int extruder, int ncycles)
+void PID_autotune(float temp, int extruder, int ncycles)
   {
   pid_number_of_cycles = ncycles;
   pid_tuning_finished = false;

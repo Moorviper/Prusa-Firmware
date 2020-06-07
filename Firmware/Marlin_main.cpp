@@ -2545,7 +2545,7 @@ void force_high_power_mode(bool start_high_power_section) {
 #ifdef TMC2130
 static void gcode_G28(bool home_x_axis, long home_x_value, bool home_y_axis, long home_y_value, bool home_z_axis, long home_z_value, bool calib, bool without_mbl)
 #else
-static void gcode_G28(bool home_x_axis, long home_x_value, bool home_y_axis, long home_y_value, bool home_z_axis, long home_z_value, bool without_mbl)
+/*static*/ void gcode_G28(bool home_x_axis, long home_x_value, bool home_y_axis, long home_y_value, bool home_z_axis, long home_z_value, bool without_mbl)
 #endif //TMC2130
 {
 	st_synchronize();

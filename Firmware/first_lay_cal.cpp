@@ -89,8 +89,13 @@ void lay1cal_intro_line()
     }
     else
     {
+    #ifdef FILAMENT_3MM /*RAMPS*/
+        enquecommand_P(PSTR("G1 X60.0 E7.0 F614.0"));
+        enquecommand_P(PSTR("G1 X120.0 E10.0 F614.0"));
+    #else
         enquecommand_P(PSTR("G1 X60.0 E9.0 F1000.0"));
         enquecommand_P(PSTR("G1 X100.0 E12.5 F1000.0"));
+    #endif
     }
 }
 
@@ -133,7 +138,11 @@ void lay1cal_before_meander()
 //! @return filament length in mm which needs to be extruded to form line
 static constexpr float count_e(float layer_height, float extrusion_width, float extrusion_length)
 {
+#ifdef FILAMENT_3MM /*RAMPS*/
+    return (extrusion_length * layer_height * extrusion_width / (M_PI * pow(2.85, 2) / 4));
+#else
     return (extrusion_length * layer_height * extrusion_width / (M_PI * pow(1.75, 2) / 4));
+#endif
 }
 
 static const float width = 0.4; //!< line width
@@ -145,6 +154,24 @@ static const float extr = count_e(height, width, length); //!< E axis movement n
 //! @param cmd_buffer character buffer needed to format gcodes
 void lay1cal_meander(char *cmd_buffer)
 {
+#ifdef FILAMENT_3MM /*RAMPS*/
+    static const char cmd_meander_0[] PROGMEM = "G1 X50 Y155";
+    static const char cmd_meander_1[] PROGMEM = "G1 Z0.150 F7200.000";
+    static const char cmd_meander_2[] PROGMEM = "G1 F1080"));
+    static const char cmd_meander_3[] PROGMEM = "G1 X75 Y155 E1.5351";
+    static const char cmd_meander_4[] PROGMEM = "G1 X100 Y155 E1.2281";
+    static const char cmd_meander_5[] PROGMEM = "G1 X200 Y155 E1.61352";
+    static const char cmd_meander_6[] PROGMEM = "G1 X200 Y135 E0.40633";
+    static const char cmd_meander_7[] PROGMEM = "G1 X50 Y135 E2.2276";
+    static const char cmd_meander_8[] PROGMEM = "G1 X50 Y115 E0.30325";
+    static const char cmd_meander_9[] PROGMEM = "G1 X200 Y115 E2.2276";
+    static const char cmd_meander_10[] PROGMEM = "G1 X200 Y95 E0.30325";
+    static const char cmd_meander_11[] PROGMEM = "G1 X50 Y95 E2.2276";
+    static const char cmd_meander_12[] PROGMEM = "G1 X50 Y75 E0.30325";
+    static const char cmd_meander_13[] PROGMEM = "G1 X200 Y75 E2.2276";
+    static const char cmd_meander_14[] PROGMEM = "G1 X200 Y55 E0.30325";
+    static const char cmd_meander_15[] PROGMEM = "G1 X50 Y55 E2.2276";
+#else
     static const char cmd_meander_0[] PROGMEM = "G1 X50 Y155";
     static const char cmd_meander_1[] PROGMEM = "G1 Z0.150 F7200.000";
     static const char cmd_meander_2[] PROGMEM = "G1 F1080";
@@ -161,6 +188,7 @@ void lay1cal_meander(char *cmd_buffer)
     static const char cmd_meander_13[] PROGMEM = "G1 X200 Y75 E3.62773";
     static const char cmd_meander_14[] PROGMEM = "G1 X200 Y55 E0.49386";
     static const char cmd_meander_15[] PROGMEM = "G1 X50 Y55 E3.62773";
+#endif
 
     static const char * const cmd_meander[] PROGMEM =
     {

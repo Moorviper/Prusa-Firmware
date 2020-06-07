@@ -70,10 +70,12 @@ All changes are marked with text `/*RAMPS*/`, so it can be easily traced using *
 * added preheat option to preheat only nozzle (for maintanage, for example)
 * added `Init. SD card` to manually initialize SD card if it fails to load when inserted in SD slot
 * HW Setup menu changes to `Live Z presets` if a steel sheet is not used, otherwise it shows `Sheets` options
-* removed Mode menu on LCD (since I use  A4988, mode can't be set to silent, power or auto mode)
+* removed `Mode` menu on LCD (since I use  A4988, mode can't be set to silent, power or auto mode)
 * mesh bed leveling has 3x3 and 7x7 options + magnets compensation
 * new XYZ calibration
 * linear advance 1.5
+* Added a factory reset menu `All but statistics` to keep info about hours and filament used
+* `First layer calibration` compatible also with 2.85mm filaments 
 
 ### Edited files:
 * boards.h
@@ -156,17 +158,27 @@ If having problems with calibration when the probe is searching the calibration 
 If your setup is different than mine you have to modify parameters and values to fit your needs. 
 **Use at your own risk!**
 
+Firmware was successfully compiled and tested with Arduino 1.8.5.
+Before compiling, be sure you have modified the file `platform.txt`.
+     
+* The `platform.txt` file can be found in Arduino instalation directory (`"C:\Program Files (x86)\Arduino\hardware\arduino\avr"`), or after Arduino has been updated at: `"C:\Users\(user)\AppData\Local\Arduino15\packages\arduino\hardware\avr\(version)"` If you can locate the file in both places, file from user profile is probably used.
+       
+* Add `"-Wl,-u,vfprintf -lprintf_flt -lm"` to `"compiler.c.elf.flags="` before existing flag "-Wl,--gc-sections"  
+
+    For example:  `"compiler.c.elf.flags={compiler.warning_flags} -Os -g -flto -fuse-linker-plugin -Wl,-u,vfprintf -lprintf_flt -lm -Wl,--gc-sections"`
+
 Before making the inital Wizard calibration, it is mandatory to do a **full factory reset to erase all eeprom and flash data!**
 
 1. Press and hold the control knob
 2. Power up the printer by turning the PSU switch on
 3. Release the control know when you hear a beep
 
-If done correctly, the LCD screen will show a menu with 4 options.
+If done correctly, the LCD screen will show a menu with 5 options.
 - Language
 - Statistics
 - Shipping prep
 - All data
+- All but statistics
 
 Select *All data* and wait for it to complete.
 After that you can continue with calibration.
