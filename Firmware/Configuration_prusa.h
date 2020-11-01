@@ -1,121 +1,52 @@
-//*******************************//
-// Suitable for Prusa MK2S clone //
-//*******************************//
-
 #ifndef CONFIGURATION_PRUSA_H
 #define CONFIGURATION_PRUSA_H
 
 #include <limits.h>
 #include "printers.h"
 /*------------------------------------
- GENERAL SETTINGS
- *------------------------------------*/
-
-// Enable to select 2.85mm. 
-// If not, 1.75mm settings are used.
-// #define FILAMENT_3MM
+GENERAL SETTINGS
+*------------------------------------*/
 
 // Printer revision
-#define PRINTER_TYPE PRINTER_MK2S
-#define PRINTER_NAME PRINTER_MK2S_NAME
-#define PRINTER_MMU_TYPE PRINTER_MK2S_SNMM		// dummy item (due to successfully compilation / building only)
-#define PRINTER_MMU_NAME PRINTER_MK2S_SNMM_NAME	// dummy item (due to successfully compilation / building only)
+#define PRINTER_TYPE PRINTER_MK2 //PRINTER_MK25, PRINTER_MK25S
+#define PRINTER_NAME PRINTER_MK2_NAME //PRINTER_MK25_NAME, PRINTER_MK25S_NAME
+#define PRINTER_MMU_TYPE PRINTER_MK2 //PRINTER_MK25_MMU2, PRINTER_MK25S_MMU2
+#define PRINTER_MMU_NAME PRINTER_MK2_NAME //PRINTER_MK25_MMU2_NAME, PRINTER_MK25S_MMU2_NAME
 
-#ifdef FILAMENT_3MM		
-	#define FILAMENT_SIZE "2_85mm_MK2S"
-#else
-	#define FILAMENT_SIZE "1_75mm_MK2S"
-#endif
 #define NOZZLE_TYPE "E3Dv6full"
 
-
+// #define FILAMENT_3MM //Uncomment if using 2.85 or 3mm filament
 #ifdef FILAMENT_3MM
-	#define DEFAULT_NOMINAL_FILAMENT_DIA  2.85  //Enter the diameter (in mm) of the filament generally used (3.0 mm or 1.75 mm). Used by the volumetric extrusion.
+	#define DEFAULT_NOMINAL_FILAMENT_DIA  2.85
+	#define FILAMENT_SIZE "2_85mm_MK2S"
 #else
-	#define DEFAULT_NOMINAL_FILAMENT_DIA  1.75  //Enter the diameter (in mm) of the filament generally used (3.0 mm or 1.75 mm). Used by the volumetric extrusion.
+	#define DEFAULT_NOMINAL_FILAMENT_DIA  1.75
+	#define FILAMENT_SIZE "1_75mm_MK2" //"1_75mm_MK25"
 #endif
-
-// Printer LCD 
-// Choose one: DISCOUNT_SMART_CONTROLLER or GADGETS3D G3D LCD/SD Controller
-// The RepRapDiscount Smart Controller (white PCB)
-// http://reprap.org/wiki/RepRapDiscount_Smart_Controller
-//
-// GADGETS3D G3D LCD/SD Controller
-// http://reprap.org/wiki/RAMPS_1.3/1.4_GADGETS3D_Shield_with_Panel
-#define G3D_PANEL
+/*------------------------------------
+ LCD SETTINGS
+ *------------------------------------*/
+//#define G3D_PANEL //Uncomment if using GADGETS3D G3D LCD/SD Controller, otherwise leave commented for Prusa RepRapDiscount Smart Controller
 	
 #ifndef G3D_PANEL
 	#define REPRAP_DISCOUNT_SMART_CONTROLLER
 #endif // !G3D_PANEL
-
-
 // Developer flag
 #define DEVELOPER
 
 // Printer name
-#define CUSTOM_MENDEL_NAME "Prusa i3 MK2S+"
+#define CUSTOM_MENDEL_NAME "Prusa i3 MK2" //"Prusa i3 MK2.5","Prusa i3 MK2.5S"
 
 // Electronics
 #define MOTHERBOARD BOARD_RAMPS_14_EFB //BOARD_RAMBO_MINI_1_3
-//#define TMC2130		//uncomment if having this drivers installed
 
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB
-	// New XYZ calibration
-	#define NEW_XYZCAL
+// Prusa Single extruder multiple material suport
+//#define SNMM (for MK2 only!)
 
-	#define HEATBED_V2
-    #define Y_COMPENSATION_FOR_CALIBRATION // adjust Y-axis movement (ultralcd.cpp), to properly find endstop when doing Z-axis calibration!
-	//#define STEEL_SHEET
-	//#define TACH0PULLUP
+#define HEATBED_V2 	
+#define STEEL_SHEET	//Uncomment if using MK52 bed
 
-	//#define TEMP_SENSOR_PINDA 1
-
-	// Power panic feature
-	//#define UVLO_ENABLE  
-
-	// Watchdog support
-	//#define WATCHDOG
-	
-	// Fan check
-	//#define FANCHECK
-
-	// TMC2130 drivers
-	//#define TMC2130	
-	#ifdef TMC2130
-		#undef UVLO_ENABLE	//UVLO uses same Z_MAX_PIN so we have to disable feature to enable drivers!
-							// or we need to find another pin for UVLO!
-	#endif
-
-	// Filament sensor
-	//#define FILAMENT_SENSOR
-	#ifdef FILAMENT_SENSOR
-		// Option 1:
-		//#define PAT9125
-
-		// Option 2:
-		//#define IR_SENSOR
-	#endif // FILAMENT_SENSOR
-#else
-	//MK2.5
-	// New XYZ calibration
-	#define NEW_XYZCAL
-
-	// Fan check
-	#define FANCHECK
-
-
-	// Watchdog support
-	#define WATCHDOG
-
-	// Filament sensor
-	#define FILAMENT_SENSOR
-	#define PAT9125
-	#define HEATBED_V2
-	#define STEEL_SHEET
-	#define TACH0PULLUP
-	#define TEMP_SENSOR_PINDA 1
-	//#define UVLO_ENABLE
-#endif
+//#define TACH0PULLUP	//Used for fan RPN. You have to define pin if enabled!
 
 // Uncomment the below for the E3D PT100 temperature sensor (with or without PT100 Amplifier)
 //#define E3D_PT100_EXTRUDER_WITH_AMP
@@ -128,79 +59,59 @@
  AXIS SETTINGS
  *------------------------------------*/
 
-//enable if using 1.8 degree motors and GT2-16T pulleys. 
-//XYZ calibration may fail if using different settings!
-#define STEPS100  
-
+//Leave uncommented if using 1.8 degree motors and GT2-16T pulleys (100 steps on X/Y axis)
+#define STEPS100 
+//If STEPS100 is commented-out, please define steps for your pulley and motor setup
 #ifndef STEPS100
 	#define CUSTOM_X_STEPS 80 //define X steps
 	#define CUSTOM_Y_STEPS 80 //define Y steps
 #endif
+
 // Steps per unit {X,Y,Z,E}
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB
+#ifdef SNMM
+	#define DEFAULT_AXIS_STEPS_PER_UNIT {100,100,3200/8,140}
+#else
 	#if defined(STEPS100) && defined(FILAMENT_3MM)
-		#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,3200/8,143} //2.85mm
+		//100 steps X/Y, 2.85mm filament
+		#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,3200/8,143} 
 	#elif defined(FILAMENT_3MM)
+		//custom steps X/Y, 2.85mm filament
 		#define DEFAULT_AXIS_STEPS_PER_UNIT   {CUSTOM_X_STEPS,CUSTOM_Y_STEPS,3200/8,143} //2.85mm
 	#elif defined(STEPS100)
+		//100 steps X/Y, 1.75mm filament
 		#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,3200/8,133} //1.75mm
 	#else
+		//custom steps X/Y, 1.75mm filament
 		#define DEFAULT_AXIS_STEPS_PER_UNIT   {CUSTOM_X_STEPS,CUSTOM_Y_STEPS,3200/8,133} //1.75mm
-	#endif // STEPS100
-#else
-	#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,3200/8,133} //1.75mm - Original Prusa
+	#endif // STEPS100	
 #endif
+
 
 // Endstop inverting
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB
-	#define X_MIN_ENDSTOP_INVERTING 1 // set to 1 to invert the logic of the endstop.
-	#define Y_MIN_ENDSTOP_INVERTING 1 // set to 1 to invert the logic of the endstop.
-	#define Z_MIN_ENDSTOP_INVERTING 0 // set to 1 to invert the logic of the endstop.
-#else
-	#define X_MIN_ENDSTOP_INVERTING 0 // set to 1 to invert the logic of the endstop.
-	#define Y_MIN_ENDSTOP_INVERTING 0 // set to 1 to invert the logic of the endstop.
-	#define Z_MIN_ENDSTOP_INVERTING 0 // set to 1 to invert the logic of the endstop.
-#endif
+#define X_MIN_ENDSTOP_INVERTING 0 // set to 1 to invert the logic of the endstop.
+#define Y_MIN_ENDSTOP_INVERTING 0 // set to 1 to invert the logic of the endstop.
+#define Z_MIN_ENDSTOP_INVERTING 0 // set to 1 to invert the logic of the endstop.
 
 // Direction inverting
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB
-	#define INVERT_X_DIR 0    // for Mendel set to 0, for Orca set to 1
-	#define INVERT_Y_DIR 0    // for Mendel set to 1, for Orca set to 0
-	#define INVERT_Z_DIR 0    // for Mendel set to 0, for Orca set to 1
-	#define INVERT_E0_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
-	#define INVERT_E1_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
-	#define INVERT_E2_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
-#else
-	#define INVERT_X_DIR 0    // for Mendel set to 0, for Orca set to 1
-	#define INVERT_Y_DIR 0    // for Mendel set to 1, for Orca set to 0
-	#define INVERT_Z_DIR 0    // for Mendel set to 0, for Orca set to 1
-	#define INVERT_E0_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
-	#define INVERT_E1_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
-	#define INVERT_E2_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
-#endif
+#define INVERT_X_DIR 0    // for Mendel set to 0, for Orca set to 1
+#define INVERT_Y_DIR 0    // for Mendel set to 1, for Orca set to 0
+#define INVERT_Z_DIR 0    // for Mendel set to 0, for Orca set to 1
+#define INVERT_E0_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
+#define INVERT_E1_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
+#define INVERT_E2_DIR 1    // for direct drive extruder v9 set to 1, for geared extruder set to 0
 
 // Home position
 #define MANUAL_X_HOME_POS 0
 #define MANUAL_Y_HOME_POS -2.2
-#define MANUAL_Z_HOME_POS 0.15
+#define MANUAL_Z_HOME_POS 0.2
 
 // Travel limits after homing
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB
-	#define X_MAX_POS 250
-	#define X_MIN_POS 0
-	#define Y_MAX_POS 210
-	#define Y_MIN_POS -2.2
-	#define Z_MAX_POS 212 //* original value = 210, I have a higher Z axis height => check parameter in ultralcd.cpp */
-	#define Z_MIN_POS 0.15
-#else
-	#define X_MAX_POS 250
-	#define X_MIN_POS 0
-	#define Y_MAX_POS 210
-	#define Y_MIN_POS -4
-	#define Z_MAX_POS 210
-	#define Z_MIN_POS 0.15
-#endif
-
+#define X_MAX_POS 250
+#define X_MIN_POS 0
+#define Y_MAX_POS 210
+#define Y_MIN_POS -4
+#define Z_MAX_POS 210
+#define Z_MIN_POS 0.15
 
 // Canceled home position
 #define X_CANCEL_POS 50
@@ -224,7 +135,7 @@
 #define SHEET_PRINT_ZERO_REF_Y 0.f
 
 #define DEFAULT_MAX_FEEDRATE          {200, 200, 12, 120}      // (mm/sec)   max feedrate (M203)
-#define DEFAULT_MAX_FEEDRATE_SILENT   {172, 172, 12, 120}      // (mm/sec)   max feedrate (M203), silent mode
+#define DEFAULT_MAX_FEEDRATE_SILENT	  {172, 172, 12, 120}      // (mm/sec)   max feedrate (M203), silent mode
 #define DEFAULT_MAX_ACCELERATION      {1000, 1000, 200, 5000}  // (mm/sec^2) max acceleration (M201)
 #define DEFAULT_MAX_ACCELERATION_SILENT     {960, 960, 200, 5000}    // (mm/sec^2) max acceleration (M201), silent mode
 
@@ -239,30 +150,51 @@
 
 #define Z_AXIS_ALWAYS_ON 1
 
+// New XYZ calibration
+#define NEW_XYZCAL
+
+// Watchdog support
+#define WATCHDOG
+
+// Fan check
+#ifdef TACH0PULLUP
+	#define FANCHECK
+#endif
+
 // Safety timer
 #define SAFETYTIMER
 #define DEFAULT_SAFETYTIMER_TIME_MINS 30
 #define FARM_DEFAULT_SAFETYTIMER_TIME_ms (45*60*1000ul)
 
-#define DEBUG_DCODE3 //D code for EEPROM
+// Filament sensor
+//If uncommented, pins need to be defined!
+//#define FILAMENT_SENSOR
+#ifdef FILAMENT_SENSOR
+	#if PRINTER_TYPE == PRINTER_MK25S
+		#define IR_SENSOR
+	#else
+		#define PAT9125
+	#endif
+#endif
 
-//#define DEBUG_BUILD 
+#define DEBUG_DCODE3
+
+//#define DEBUG_BUILD
 #ifdef DEBUG_BUILD
 //#define _NO_ASM
 #define DEBUG_DCODES //D codes
-//#define DEBUG_DCODE5 //D code for flash!
 #define DEBUG_STACK_MONITOR        //Stack monitor in stepper ISR
 //#define DEBUG_FSENSOR_LOG          //Reports fsensor status to serial
 //#define DEBUG_CRASHDET_COUNTERS  //Display crash-detection counters on LCD
-//#define DEBUG_RESUME_PRINT       //Resume/save print debug enable
-//#define DEBUG_UVLO_AUTOMATIC_RECOVER // Power panic automatic recovery debug output
+//#define DEBUG_RESUME_PRINT       //Resume/save print debug enable 
+//#define DEBUG_UVLO_AUTOMATIC_RECOVER // Power panic automatic recovery debug output 
 //#define DEBUG_DISABLE_XMINLIMIT  //x min limit ignored
 //#define DEBUG_DISABLE_XMAXLIMIT  //x max limit ignored
 //#define DEBUG_DISABLE_YMINLIMIT  //y min limit ignored
 //#define DEBUG_DISABLE_YMAXLIMIT  //y max limit ignored
 //#define DEBUG_DISABLE_ZMINLIMIT  //z min limit ignored
 //#define DEBUG_DISABLE_ZMAXLIMIT  //z max limit ignored
-#define DEBUG_DISABLE_STARTMSGS //no startup messages
+#define DEBUG_DISABLE_STARTMSGS //no startup messages 
 //#define DEBUG_DISABLE_MINTEMP   //mintemp error ignored
 //#define DEBUG_DISABLE_SWLIMITS  //sw limits ignored
 //#define DEBUG_DISABLE_LCD_STATUS_LINE  //empty four lcd line
@@ -270,7 +202,7 @@
 //#define DEBUG_DISABLE_PRUSA_STATISTICS //disable prusa_statistics() mesages
 //#define DEBUG_XSTEP_DUP_PIN 21   //duplicate x-step output to pin 21 (SCL on P3)
 //#define DEBUG_YSTEP_DUP_PIN 21   //duplicate y-step output to pin 21 (SCL on P3)
-#define DEBUG_DISABLE_FANCHECK     //disable fan check (no ISR INT7, check disabled)
+//#define DEBUG_DISABLE_FANCHECK     //disable fan check (no ISR INT7, check disabled)
 //#define DEBUG_DUMP_TO_2ND_SERIAL   //dump received characters to 2nd serial line
 //#define DEBUG_STEPPER_TIMER_MISSED // Stop on stepper timer overflow, beep and display a message.
 //#define PLANNER_DIAGNOSTICS // Show the planner queue status on printer display.
@@ -285,14 +217,14 @@
  *------------------------------------*/
 
 // Mintemps
-#define HEATER_0_MINTEMP 15 //30
+#define HEATER_0_MINTEMP 15
 #define HEATER_1_MINTEMP 5
 #define HEATER_2_MINTEMP 5
 #define HEATER_MINTEMP_DELAY 15000                // [ms] ! if changed, check maximal allowed value @ ShortTimer
 #if HEATER_MINTEMP_DELAY>USHRT_MAX
 #error "Check maximal allowed value @ ShortTimer (see HEATER_MINTEMP_DELAY definition)"
 #endif
-#define BED_MINTEMP 15 //30
+#define BED_MINTEMP 15
 #define BED_MINTEMP_DELAY 50000                   // [ms] ! if changed, check maximal allowed value @ ShortTimer
 #if BED_MINTEMP_DELAY>USHRT_MAX
 #error "Check maximal allowed value @ ShortTimer (see BED_MINTEMP_DELAY definition)"
@@ -315,12 +247,17 @@
 #define  DEFAULT_Kd 73.76
 #else
 // Define PID constants for extruder
-#define  DEFAULT_Kp 20  //40    //20
-#define  DEFAULT_Ki 0.4 //0.7   //0.4
-#define  DEFAULT_Kd 80  //160   //50
-// #define  DEFAULT_Kp 16.13 // Original Prusa
-// #define  DEFAULT_Ki 1.1625// Original Prusa
-// #define  DEFAULT_Kd 56.23 // Original Prusa
+#ifdef HEATBED_V2
+	//PID parameters for MK52 bed
+	#define  DEFAULT_Kp 16.13
+	#define  DEFAULT_Ki 1.1625
+	#define  DEFAULT_Kd 56.23
+#else 
+	//PID parameters for MK42 bed
+	#define  DEFAULT_Kp 40.925
+	#define  DEFAULT_Ki 4.875
+	#define  DEFAULT_Kd 86.085
+#endif
 #endif
 
 // Extrude mintemp
@@ -337,6 +274,16 @@
 /*------------------------------------
  LOAD/UNLOAD FILAMENT SETTINGS
  *------------------------------------*/
+#ifdef SNMM
+//#define BOWDEN_LENGTH	408
+#define BOWDEN_LENGTH 433 //default total length for filament fast loading part; max length for extrusion is 465 mm!; this length can be adjusted in service menu
+#define FIL_LOAD_LENGTH 102 //length for loading filament into the nozzle
+#define FIL_COOLING 10 //length for cooling moves
+#define E_MOTOR_LOW_CURRENT 350 // current for PRUSAY code
+#define E_MOTOR_HIGH_CURRENT 700 //current for unloading filament, stop print, PRUSAY ramming
+#endif //SNMM
+
+//#define DIS //for measuring bed heigth and PINDa detection heigth relative to auto home point, experimental function
 
 // Load filament commands
 #ifdef FILAMENT_3MM
@@ -351,10 +298,9 @@
 #define LOAD_FILAMENT_2 "G1 E40 F100"
 #endif // FILAMENT_3MM
 
-
 // Unload filament commands
 #define UNLOAD_FILAMENT_0 "M83"
-#define UNLOAD_FILAMENT_1 "G1 E-90 F7000" //"G1 E-80 F7000"
+#define UNLOAD_FILAMENT_1 "G1 E-80 F7000"
 
 /*------------------------------------
  CHANGE FILAMENT SETTINGS
@@ -370,14 +316,17 @@
 #define FILAMENTCHANGE_FINALRETRACT -80
 
 #define FILAMENTCHANGE_FIRSTFEED 70 //E distance in mm for fast filament loading sequence used used in filament change (M600)
-#define FILAMENTCHANGE_FINALFEED 25 //E distance in mm for slow filament loading sequence used used in filament change (M600) and filament load (M701)
+#define FILAMENTCHANGE_FINALFEED 25 //E distance in mm for slow filament loading sequence used used in filament change (M600) and filament load (M701) 
 #define FILAMENTCHANGE_RECFEED 5
 
 #define FILAMENTCHANGE_XYFEED 50
 #define FILAMENTCHANGE_EFEED_FIRST 20 // feedrate in mm/s for fast filament loading sequence used in filament change (M600)
-#define FILAMENTCHANGE_EFEED_FINAL 3.3f // feedrate in mm/s for slow filament loading sequence used in filament change (M600) and filament load (M701)
-//#define FILAMENTCHANGE_RFEED 400
-#define FILAMENTCHANGE_RFEED 7000 / 60
+#define FILAMENTCHANGE_EFEED_FINAL 3.3f // feedrate in mm/s for slow filament loading sequence used in filament change (M600) and filament load (M701) 
+#if PRINTER_TYPE == PRINTER_MK2
+	#define FILAMENTCHANGE_RFEED 400
+#else
+	#define FILAMENTCHANGE_RFEED 7000 / 60
+#endif
 #define FILAMENTCHANGE_EXFEED 2
 #define FILAMENTCHANGE_ZFEED 15
 
@@ -392,6 +341,7 @@
 
 #ifdef FILAMENT_RUNOUT_SUPPORT
 	#define FILAMENT_RUNOUT_SENSOR 1
+	#define FILAMENT_RUNOUT_SCRIPT "M600"
 #endif
 
 // temperature runaway
@@ -409,16 +359,8 @@
 #define DIGIPOT_MOTOR_CURRENT {135,135,135,135,135} // Values 0-255 (RAMBO 135 = ~0.75A, 185 = ~1A)
 #define DIGIPOT_MOTOR_CURRENT_LOUD {135,135,135,135,135}
 
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB // It doesn't matter for A9800 drivers
-#define MOTOR_CURRENT_PWM_RANGE 2000
-#define DEFAULT_PWM_MOTOR_CURRENT  {270, 830, 450} // {XY,Z,E}
-#define DEFAULT_PWM_MOTOR_CURRENT_LOUD  {540, 830, 500} // {XY,Z,E}
-#define Z_SILENT 0
-#define Z_HIGH_POWER 200
-#endif
-
 // Motor Current settings for RAMBo mini PWM value = MotorCurrentSetting * 255 / range
-#if MOTHERBOARD == BOARD_RAMBO_MINI_1_0 || MOTHERBOARD == BOARD_RAMBO_MINI_1_3
+#if MOTHERBOARD == BOARD_RAMPS_14_EFB || MOTHERBOARD == BOARD_RAMBO_MINI_1_0 || MOTHERBOARD == BOARD_RAMBO_MINI_1_3
 #define MOTOR_CURRENT_PWM_RANGE 2000
 #define DEFAULT_PWM_MOTOR_CURRENT  {270, 830, 450} // {XY,Z,E}
 #define DEFAULT_PWM_MOTOR_CURRENT_LOUD  {540, 830, 500} // {XY,Z,E}
@@ -437,16 +379,16 @@
 #define MBL_Z_STEP 0.01
 
 // Mesh definitions
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB
-#define MESH_MIN_X 35
-#define MESH_MAX_X 239  //238
-#define MESH_MIN_Y 8 //6
-#define MESH_MAX_Y 202
+#if PRINTER_TYPE == PRINTER_MK2
+	#define MESH_MIN_X 35
+	#define MESH_MAX_X 238
+	#define MESH_MIN_Y 6
+	#define MESH_MAX_Y 202
 #else
-#define MESH_MIN_X 24
-#define MESH_MAX_X 228
-#define MESH_MIN_Y 6
-#define MESH_MAX_Y 210
+	#define MESH_MIN_X 24
+	#define MESH_MAX_X 228
+	#define MESH_MIN_Y 6
+	#define MESH_MAX_Y 210
 #endif
 
 // Mesh upsample definition
@@ -460,19 +402,15 @@
 #define BED_ADJUSTMENT_UM_MAX 100
 
 #define MESH_HOME_Z_CALIB 0.2
-#define MESH_HOME_Z_SEARCH 5.0f //Z lift for homing, mesh bed leveling etc.
+#define MESH_HOME_Z_SEARCH 5.0f           // Z lift for homing, mesh bed leveling etc.
 
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB  //CHECK BEFORE COMPILING!
-	//for Prusa Bear upgrade:
-	#define X_PROBE_OFFSET_FROM_EXTRUDER 23    // Z probe to nozzle X offset: -left  +right
-	#define Y_PROBE_OFFSET_FROM_EXTRUDER 5 //4     // Z probe to nozzle Y offset: -front +behind
-	#define Z_PROBE_OFFSET_FROM_EXTRUDER -0.4  // Z probe to nozzle Z offset: -below (always!)
+#define X_PROBE_OFFSET_FROM_EXTRUDER 23     // Z probe to nozzle X offset: -left  +right
+#if PRINTER_TYPE == PRINTER_MK2
+	#define Y_PROBE_OFFSET_FROM_EXTRUDER 9     // Z probe to nozzle Y offset: -front +behind
 #else
-	#define X_PROBE_OFFSET_FROM_EXTRUDER 23     // Z probe to nozzle X offset: -left  +right
 	#define Y_PROBE_OFFSET_FROM_EXTRUDER 5     // Z probe to nozzle Y offset: -front +behind
-	#define Z_PROBE_OFFSET_FROM_EXTRUDER -0.4  // Z probe to nozzle Z offset: -below (always!)
 #endif
-
+#define Z_PROBE_OFFSET_FROM_EXTRUDER -0.4  // Z probe to nozzle Z offset: -below (always!)
 #endif
 
 // Bed Temperature Control
@@ -510,18 +448,9 @@
 #define  DEFAULT_bedKi 1.60
 #define  DEFAULT_bedKd 73.76
 #else
-#if MOTHERBOARD == BOARD_RAMPS_14_EFB
-#define  DEFAULT_bedKp 55       //97.51
-#define  DEFAULT_bedKi 0.5      //4.66
-#define  DEFAULT_bedKd 250      //510.14
-//#define  DEFAULT_bedKp 109.69
-//#define  DEFAULT_bedKi 4.87
-//#define  DEFAULT_bedKd 617.80
-#else
 #define  DEFAULT_bedKp 126.13
 #define  DEFAULT_bedKi 4.30
 #define  DEFAULT_bedKd 924.76
-#endif
 #endif
 
 //120v 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
@@ -538,18 +467,17 @@
  PREHEAT SETTINGS
  *------------------------------------*/
 
-#define FARM_PREHEAT_HOTEND_TEMP 210
+#define FARM_PREHEAT_HOTEND_TEMP 250
 #define FARM_PREHEAT_HPB_TEMP 80
-#define FARM_PREHEAT_FAN_SPEED 0
-
-#define PREHEAT_HOTEND_TEMP 250
-#define PREHEAT_HPB_TEMP 60
 
 #define PLA_PREHEAT_HOTEND_TEMP 215
 #define PLA_PREHEAT_HPB_TEMP 60
 
 #define ASA_PREHEAT_HOTEND_TEMP 260
 #define ASA_PREHEAT_HPB_TEMP 105
+
+#define PC_PREHEAT_HOTEND_TEMP 275
+#define PC_PREHEAT_HPB_TEMP 105
 
 #define ABS_PREHEAT_HOTEND_TEMP 255
 #define ABS_PREHEAT_HPB_TEMP 100
@@ -612,7 +540,7 @@
 #elif defined(E3D_PT100_EXTRUDER_NO_AMP)
 #define TEMP_SENSOR_0 148
 #else
-#define TEMP_SENSOR_0 1 //5 for Original Prusa
+#define TEMP_SENSOR_0 5
 #endif
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
@@ -623,6 +551,7 @@
 #else
 #define TEMP_SENSOR_BED 1
 #endif
+//#define TEMP_SENSOR_PINDA 1	//If uncommented, define pin to where you connected the sensor pin!
 
 #define STACK_GUARD_TEST_VALUE 0xA2A2
 
@@ -635,13 +564,17 @@
 #define Z_BABYSTEP_MIN -3999
 #define Z_BABYSTEP_MAX 0
 
-#define PINDA_PREHEAT_X 20
-#define PINDA_PREHEAT_Y 60
-#define PINDA_PREHEAT_Z 0.15
-/*
-#define PINDA_PREHEAT_X 70
-#define PINDA_PREHEAT_Y -3
-#define PINDA_PREHEAT_Z 1*/
+#ifdef HEATBED_V2
+	//for MK52 bed
+	#define PINDA_PREHEAT_X 20
+	#define PINDA_PREHEAT_Y 60
+	#define PINDA_PREHEAT_Z 0.15
+#else
+	//for MK42 bed
+	#define PINDA_PREHEAT_X 70
+	#define PINDA_PREHEAT_Y -3
+	#define PINDA_PREHEAT_Z 1
+#endif
 #define PINDA_HEAT_T 120 //time in s
 
 #define PINDA_MIN_T 50
@@ -660,36 +593,25 @@
 
 #define DEFAULT_PID_TEMP 210
 
-#define MIN_PRINT_FAN_SPEED 75
+#ifdef FANCHECK
+	#define MIN_PRINT_FAN_SPEED 75
+#endif
 
-
-// How much shall the print head be lifted on power panic?
-// Ideally the Z axis will reach a zero phase of the stepper driver on power outage. To simplify this,
-// UVLO_Z_AXIS_SHIFT shall be an integer multiply of the stepper driver cycle, that is 4x full step.
-// For example, the Prusa i3 MK2 with 16 microsteps per full step has Z stepping of 400 microsteps per mm.
-// At 400 microsteps per mm, a full step lifts the Z axis by 0.04mm, and a stepper driver cycle is 0.16mm.
-// The following example, 12 * (4 * 16 / 400) = 12 * 0.16mm = 1.92mm.
-//#define UVLO_Z_AXIS_SHIFT 1.92
-#define UVLO_Z_AXIS_SHIFT 0 //0.64
-// When powered off during PP recovery, the Z axis position can still be re-adjusted. In this case
-// we just need to shift to the nearest fullstep, but we need a move which is at least
-// "dropsegments" steps long. All the above rules still need to apply.
-#define UVLO_TINY_Z_AXIS_SHIFT 0 //0.16
-// If power panic occured, and the current temperature is higher then target temperature before interrupt minus this offset, print will be recovered automatically. 
-#define AUTOMATIC_UVLO_BED_TEMP_OFFSET 5
 
 #define M600_TIMEOUT 600  //seconds
 
+#ifndef SNMM
 //#define SUPPORT_VERBOSITY
+#endif
 
 #define MMU_REQUIRED_FW_BUILDNR 132
 #define MMU_FORCE_STEALTH_MODE
 #define MMU_DEBUG //print communication between MMU2 and printer on serial
-//#define MMU_HAS_CUTTER
+#define MMU_HAS_CUTTER
 
 #define MMU_IDLER_SENSOR_ATTEMPTS_NR 21 //max. number of attempts to load filament if first load failed; value for max bowden length and case when loading fails right at the beginning
 
-//#define HEATBED_ANALYSIS //for meash bed leveling and heatbed analysis D-codes D80 and D81
-//#define MICROMETER_LOGGING //related to D-codes D80 and D81, currently works on MK2.5 only (MK3 board pin definitions missing)
+
+
 
 #endif //__CONFIGURATION_PRUSA_H

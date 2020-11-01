@@ -137,12 +137,6 @@ void delay2(unsigned long ms)
 		}
 	}
 }
-#else //(MOTHERBOARD == BOARD_RAMPS_14_EFB)
-	
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include "Arduino.h"
-//#include "io_atmega2560.h" // preveri
 
 #define BEEPER              33 // for Rambo is 84
 

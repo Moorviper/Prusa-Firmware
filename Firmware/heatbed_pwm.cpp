@@ -258,12 +258,7 @@ ISR(TIMER0_OVF_vect)          // timer compare interrupt service routine
 			return;           // want full duty for the next ONE cycle again - so keep on heating and just wait for the next timer ovf
 		}
 		// otherwise moving towards FALL
-		// @@TODO it looks like ONE_TO_FALL isn't necessary, there are no artefacts at all
 		state = States::ONE;//_TO_FALL;
-//		TCCR0B = (1 << CS00);      // change prescaler to 1, i.e. 62.5kHz
-//		break;
-//	case States::ONE_TO_FALL:
-//		OCR0B = 255;              // zero duty
 		state=States::FALL;
 		fastCounter = fastMax - 1;// we'll do 16-1 cycles of RISE
 		TCNT0 = 255;              // force overflow on the next clock cycle

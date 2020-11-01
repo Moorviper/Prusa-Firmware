@@ -114,20 +114,20 @@ void eeprom_default_sheet_name(uint8_t index, SheetName &sheetName)
 {
     static_assert(8 == sizeof(SheetName),"Default sheet name needs to be adjusted.");
 
-    #ifdef STEEL_SHEET
-        if (index < 2)
-        {
-            strcpy_P(sheetName.c, PSTR("Smooth"));
-        }
-        else if (index < 4)
-        {
-            strcpy_P(sheetName.c, PSTR("Textur"));
-        }
-        else
-        {
-            strcpy_P(sheetName.c, PSTR("Custom"));
-        }
-    #else
+	#ifdef STEEL_SHEET    
+		if (index < 2)
+	    {
+	        strcpy_P(sheetName.c, PSTR("Smooth"));
+	    }
+	    else if (index < 4)
+	    {
+	        strcpy_P(sheetName.c, PSTR("Textur"));
+	    }
+	    else
+	    {
+	        strcpy_P(sheetName.c, PSTR("Custom"));
+	    }
+	#else
         if (index < 2)
         {
             strcpy_P(sheetName.c, PSTR("PLA   "));
@@ -140,9 +140,7 @@ void eeprom_default_sheet_name(uint8_t index, SheetName &sheetName)
         {
             strcpy_P(sheetName.c, PSTR("Other "));
         }
-    #endif // STEEL_SHEET
-
-
+#endif // STEEL_SHEET
 
     switch (index)
     {

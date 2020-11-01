@@ -25,6 +25,7 @@
 #if MOTHERBOARD == BOARD_RAMPS_14_EFB //33
 	#include "pins_Ramps.h"
 #endif //MOTHERBOARD == BOARD_RAMPS_14_EFB
+
 #ifndef KNOWN_BOARD
 #error Unknown MOTHERBOARD value in configuration.h
 #endif
