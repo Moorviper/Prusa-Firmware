@@ -21,6 +21,10 @@ This firmware is configured for a Prusa Bear MK2S fitted with an Arduino RAMPS 1
 **It is pre-configured for TMC2130, but it is not tested, since I didn't have TMC drivers. Use with caution!**
 If using different setup than I do, please reconfigure all needed parameters and pins. I will not be responsible if you damage your drivers, board or any other equipment.
 
+Useful links for TMC2130:
+  * https://www.instructables.com/Upgrading-RAMPS-14-With-TMC2130-Stepper-Drivers/
+  * https://toms3d.org/2017/12/09/tmc2130-guide/
+  
 ### Power supply
 * [Original Prusa 12V 240W PSU](https://shop.prusa3d.com/en/mk2mk2s/176-psu-12v-240w.html)
 
