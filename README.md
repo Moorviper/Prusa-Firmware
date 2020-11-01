@@ -1,221 +1,206 @@
-# Prusa Firmware MK3
+# Prusa Firmware 3.9.1 (MK2/S/2.5/2.5S) for Arduino RAMPS 1.4 board 
 
-This repository contains the source code and the development versions of the firmware running on the [Original Prusa i3](https://prusa3d.com/) MK3S/MK3/MK2.5S/MK2.5 line of printers.
+
+
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=BbjC9gWVAi0"><img src="https://img.youtube.com/vi/BbjC9gWVAi0/0.jpg" alt="IMAGE ALT TEXT"></a>
+</div>
+
+This repository contains the source code of a working firmware running on an Arduino RAMPS board for my Prusa i3 Bear style 3D printer (based on an [Original Prusa i3](https://prusa3d.com/)).
 
 The latest official builds can be downloaded from [Prusa Drivers](https://www.prusa3d.com/drivers/). Pre-built development releases are also [available here](https://github.com/prusa3d/Prusa-Firmware/releases).
 
 The firmware for the Original Prusa i3 printers is proudly based on [Marlin 1.0.x](https://github.com/MarlinFirmware/Marlin/) by Scott Lahteine (@thinkyhead) et al. and is distributed under the terms of the [GNU GPL 3 license](LICENSE).
 
-
-# Table of contents
-
-<!--ts-->
-   * [Linux build](#linux)
-   * Windows build
-     * [Using Arduino](#using-arduino)
-     * [Using Linux subsystem](#using-linux-subsystem-under-windows-10-64-bit)
-     * [Using Git-bash](#using-git-bash-under-windows-10-64-bit)
-   * [Automated tests](#3-automated-tests)
-   * [Documentation](#4-documentation)
-   * [FAQ](#5-faq)
-<!--te-->
+Please read the whole document, especially the ***Important*** section at the bottom.
 
 
-# Build
-## Linux
+## 1. Specs
 
-1. Clone this repository and checkout the correct branch for your desired release version.
+This firmware is configured for a Prusa Bear MK2S fitted with an Arduino RAMPS 1.4 and A4988.
+**It is pre-configured for TMC2130, but it is not tested, since I didn't have TMC drivers. Use with caution!**
+If using different setup than I do, please reconfigure all needed parameters and pins. I will not be responsible if you damage your drivers, board or any other equipment.
 
-1. Set your printer model. 
-   - For MK3 --> skip to step 3. 
-   - If you have a different printer model, follow step [2.b](#2b) from Windows build
-1. Install GNU AWK  `sudo apt-get install gawk`  
-If you use mawk instead of gawk you get strange errors when multi language support is generated like:  
-`awk: line 2: function strtonum never defined
-sed: couldn't write 4 items to stdout: Broken pipe
-./lang-build.sh: 121: ./lang-build.sh: arithmetic expression: expecting EOF: "0x"awk: line 2: function strtonum never defined
-sed: couldn't write 4 items to stdout: Broken pipe
-tr: write error: Broken pipe
-./lang-build.sh: 121: ./lang-build.sh: arithmetic expression: expecting EOF: "0x"awk: line 2: function strtonum never defined
-sed: couldn't write 4 items to stdout: Broken pipe
-tr: write error: Broken pipe
-tr: write error
-cut: write error: Broken pipeNG! - some texts not found in lang_en.txt! updating binary:
-  primary language ids...awk: line 2: function strtonum never defined
-sed: couldn't flush stdout: Broken pipe`
-   
-1. Run `./build.sh`
-   - Output hex file is at `"PrusaFirmware/lang/firmware.hex"` . In the same folder you can hex files for other languages as well.
+### Power supply
+* [Original Prusa 12V 240W PSU](https://shop.prusa3d.com/en/mk2mk2s/176-psu-12v-240w.html)
 
-1. Connect your printer and flash with PrusaSlicer ( Configuration --> Flash printer firmware ) or Slic3r PE.
-   - If you wish to flash from Arduino, follow step [2.c](#2c) from Windows build first.
+### Motherboard
+* [RAMPS 1.4](https://reprap.org/wiki/RAMPS_1.4)
+
+### Printer frame
+* [Prusa i3 Bear Full Upgrade](https://github.com/gregsaun/prusa_i3_bear_upgrade/tree/master/full_upgrade) (MK2S)
+* [Prusa i3 Bear Printed parts on Thingiverse](https://www.thingiverse.com/pekcitron/designs) (Grégoire Saunier)
+* [Prusa i3 Bear Printed parts on Github](https://github.com/gregsaun/prusa_i3_bear_upgrade/tree/master/full_upgrade) (Grégoire Saunier)
+
+### Stepper motor drivers
+* [A4988 (from G3D)](https://reprap.org/wiki/G3D_driver) on X/Y/Z/E axis
+
+### Steppers
+* **X-axis:** 1.8° motor
+* **Y-axis:** 1.8° motor
+* **Z-axis:** 1.8° motor
+* **Extruder:** 1.8° motor
+* **Microstepping:** 1/16
+
+### Heatbed
+* [Original Prusa MK42 12V with ATC Semitec 104GT-2 thermistor](https://shop.prusa3d.com/en/mk2mk2s/119-heatbed-mk42-12v-assembly.html)
+
+### Hotend
+ * Direct drive E3D V6 clone
+ * 20W 12V Heater Cartridge
+ * EPCOS 100k thermistor
+ * [PINDA V1](https://shop.prusa3d.com/en/mk2mk2s/127-pinda-probe-v1.html?search_query=pinda&results=2) (Reference: REP-PIN-DA0)
+
+### LCD Controller
+* [GADGETS3D G3D LCD/SD Controller](https://reprap.org/wiki/RAMPS_1.3/1.4_GADGETS3D_Shield_with_Panel)
+* (optional) [RERAP Discount Smart Controller](https://reprap.org/wiki/RepRapDiscount_Smart_Controller) (can be easily set in Configuration_prusa.h)
+
+### Endstops
+* **Mehcanical:** X/Y
+* **Inductive (PINDA):** Z
+
+### Wiring Guide
+* [Reprap RAMPS 1.4](https://reprap.org/wiki/RAMPS_1.4)
+* PINDA wiring:
+  | Endstop  | Endstop pin  | PINDA wire |
+  | :---:  | :---:  | :---:  |
+  | Z-MIN  | VCC (+)  | Brown  |
+  | Z-MIN  | GND (-)  | Blue  |
+  | Z-MIN  | SIGNAL (S)  | Black  |
 
 
-_Notes:_
+## 2. Firmware
 
-The script downloads Arduino with our modifications and Rambo board support installed, unpacks it into folder `PF-build-env-\<version\>` on the same level, as your Prusa-Firmware folder is located, builds firmware for MK3 using that Arduino in Prusa-Firmware-build folder on the same level as Prusa-Firmware, runs secondary language support scripts. Firmware with secondary language support is generated in lang subfolder. Use firmware.hex for MK3 variant. Use `firmware_\<lang\>.hex` for other printers. Don't forget to follow step [2.b](#2b) first for non-MK3 printers.
+The firmware has been modified in many places and files to get it fully working.
+All changes are marked with text `/*RAMPS*/`, so it can be easily traced using **Find/Search** option in text editors (or software like Visual Studio or VS Code).
 
-## Windows
-### Using Arduino
-_Note: Multi language build is not supported._
+### Features and changes:
+* added preheat option to preheat only nozzle (for example during maintanance or swapping nozzles)
+* added `Init. SD card` to manually initialize SD card if it fails to load when inserted in SD slot
+* HW Setup menu changes to `Live Z presets` if a steel sheet is not used, otherwise it shows `Sheets` options
+* removed `Mode` menu on LCD (since I use  A4988, mode can't be set to silent, power or auto mode)
+* mesh bed leveling has 3x3 and 7x7 options + magnets compensation
+* new XYZ calibration
+* linear advance 1.5
+* Added a factory reset menu `All but statistics` to keep info about hours and filament used
+* `First layer calibration` compatible also with 2.85mm filaments 
 
-#### 1. Development environment preparation
+### Edited files:
+* boards.h
+* config.h
+* configuration.h (check your probe offset settings)
+  * `#define X_PROBE_OFFSET_FROM_EXTRUDER -25`
+  * `#define Y_PROBE_OFFSET_FROM_EXTRUDER -5 //-29`
+  * `#define Z_PROBE_OFFSET_FROM_EXTRUDER -12.35`
+* heatbed_pwm.cpp
+* Marlin.h
+* Marlin_main.cpp
+* mesh_bed_calibration.cpp 
+(check settings for your setup so that the probe hits all bed points - use Pronterface output to help define the right values)
+  ```
+  const float bed_ref_points_4[] PROGMEM = {
+	37.f - BED_PRINT_ZERO_REF_X - X_PROBE_OFFSET_FROM_EXTRUDER - SHEET_PRINT_ZERO_REF_X,
+	18.4f - BED_PRINT_ZERO_REF_Y - Y_PROBE_OFFSET_FROM_EXTRUDER - SHEET_PRINT_ZERO_REF_Y,
 
-**a.** Install `"Arduino Software IDE"` from the official website `https://www.arduino.cc -> Software->Downloads` 
-   
-   _It is recommended to use version `"1.8.5"`, as it is used on out build server to produce official builds._
+	245.f - BED_PRINT_ZERO_REF_X - X_PROBE_OFFSET_FROM_EXTRUDER  - SHEET_PRINT_ZERO_REF_X,
+	18.4f - BED_PRINT_ZERO_REF_Y - Y_PROBE_OFFSET_FROM_EXTRUDER - SHEET_PRINT_ZERO_REF_Y,
 
-**b.** Setup Arduino to use Prusa Rambo board definition
+	245.f - BED_PRINT_ZERO_REF_X - X_PROBE_OFFSET_FROM_EXTRUDER  - SHEET_PRINT_ZERO_REF_X,
+	210.4f - BED_PRINT_ZERO_REF_Y - Y_PROBE_OFFSET_FROM_EXTRUDER - SHEET_PRINT_ZERO_REF_Y,
 
-* Open Arduino and navigate to File -> Preferences -> Settings
-* To the text field `"Additional Boards Manager URLSs"` add `https://raw.githubusercontent.com/prusa3d/Arduino_Boards/master/IDE_Board_Manager/package_prusa3d_index.json`
-* Open Board manager (`Tools->Board->Board manager`), and install `Prusa Research AVR Boards by Prusa Research`
+	37.f - BED_PRINT_ZERO_REF_X - X_PROBE_OFFSET_FROM_EXTRUDER  - SHEET_PRINT_ZERO_REF_X,
+	210.4f - BED_PRINT_ZERO_REF_Y - Y_PROBE_OFFSET_FROM_EXTRUDER - SHEET_PRINT_ZERO_REF_Y
+  };
+  ```
 
-**c.** Modify compiler flags in `platform.txt` file
+* mesh_bed_calibration.h
+(check settings for your setup so that the probe hits all bed points - use Pronterface output to help define the right values)
+  ```
+  #define BED_ZERO_REF_X (- 22.f + X_PROBE_OFFSET_FROM_EXTRUDER) // -22 + 23 = 1
+  #define BED_ZERO_REF_Y (- 0.6f + Y_PROBE_OFFSET_FROM_EXTRUDER + 4.f) // -0.6 + 5 + 4 = 8.4
+  #ifdef HEATBED_V2
+    #define BED_X0 (2.f - BED_ZERO_REF_X) //1
+    #define BED_Y0 (9.4f - BED_ZERO_REF_Y) //1
+    #define BED_Xn (206.f - BED_ZERO_REF_X) //205
+    #define BED_Yn (213.4f - BED_ZERO_REF_Y) //205
+  #else
+    #define BED_X0 (13.f - BED_ZERO_REF_X)
+    #define BED_Y0 (8.4f - BED_ZERO_REF_Y)
+    #define BED_Xn (216.f - BED_ZERO_REF_X)
+    #define BED_Yn (202.4f - BED_ZERO_REF_Y)
+  #endif //not HEATBED_V2
+  ```
+* pins.h  
+* sm4.c  
+  * corrected pinout mapping for motors to reflect Ramps schematics
+  * added function to re-calculate steps if we use different pulleys (eg. GT20 with 80 steps instead of 100)
+* swi2c.c
+* system_timer.c
+* temperature.cpp
+  * reconfigured timers
+  * redefined old PWM for bed heating
+* timer02.c:
+  * reused old definition of timer02
+* timer02.h:
+  * reused old definition of timer02
+* tmc2130.cpp
+* uart2.c
+* ultralcd.cpp
+  * added "Init. SD card" menu option to manually initialize SD card if it fails when inserted in SD card slot  
+* w25x20cl.c
+* w25x20cl.h
+* xyzcal.cpp
+  * added bed points for MK42 bed (set X and Y coordinates to fit your bed)
+  ```
+  // set x,y coordinates to fit your bed
+  #if MOTHERBOARD == BOARD_RAMPS_14_EFB
+	#ifdef STEPS100
+		const int16_t xyzcal_point_xcoords[4] PROGMEM = { 1150, 21450, 21450, 1150 };
+		const int16_t xyzcal_point_ycoords[4] PROGMEM = { 600, 600, 19750, 19750 };
+	#else
+		const int16_t xyzcal_point_xcoords[4] PROGMEM = { 1150 * CUSTOM_X_STEPS / 100, 21450 * CUSTOM_X_STEPS / 100, 21450 * CUSTOM_X_STEPS / 100, 1150 * CUSTOM_X_STEPS / 100};
+		const int16_t xyzcal_point_ycoords[4] PROGMEM = { 600 * CUSTOM_Y_STEPS / 100, 600 * CUSTOM_Y_STEPS / 100, 19750 * CUSTOM_Y_STEPS / 100, 19750 * CUSTOM_Y_STEPS / 100};
+	#endif // STEPS100
+  #endif //!MOTHERBOARD == BOARD_RAMPS_14_EFB
+  ```
+### Added new files:
+* pins_Ramps.h
+* Configuration_prusa.h
+
+### Pronterface 
+If having problems with calibration when the probe is searching the calibration points, I recommend to use Pronterface output to find the correct values.
+
+
+## 3. IMPORTANT
+If your setup is different than mine you have to modify parameters and values to fit your needs. 
+**Use at your own risk!**
+
+Firmware was successfully compiled and tested with Arduino 1.8.5.
+Before compiling, be sure you have modified the file `platform.txt`.
      
-* The platform.txt file can be found in Arduino instalation directory, or after Arduino has been updated at: `"C:\Users\(user)\AppData\Local\Arduino15\packages\arduino\hardware\avr\(version)"` If you can locate the file in both places, file from user profile is probably used.
+* The `platform.txt` file can be found in Arduino instalation directory (`"C:\Program Files (x86)\Arduino\hardware\arduino\avr"`), or after Arduino has been updated at: `"C:\Users\(user)\AppData\Local\Arduino15\packages\arduino\hardware\avr\(version)"`. If you can locate the file in both places, file from user profile is probably used.
        
-* Add `"-Wl,-u,vfprintf -lprintf_flt -lm"` to `"compiler.c.elf.flags="` before existing flag "-Wl,--gc-sections"  
+* Add `"-Wl,-u,vfprintf -lprintf_flt -lm"` to `"compiler.c.elf.flags="` before existing flag `"-Wl,--gc-sections"`  
 
-    For example:  `"compiler.c.elf.flags=-w -Os -Wl,-u,vfprintf -lprintf_flt -lm -Wl,--gc-sections"`
-   
-_Notes:_
+    For example:  `"compiler.c.elf.flags={compiler.warning_flags} -Os -g -flto -fuse-linker-plugin -Wl,-u,vfprintf -lprintf_flt -lm -Wl,--gc-sections"`
 
+Before making the inital Wizard calibration, it is mandatory to do a **full factory reset to erase all eeprom data!**
 
-_In the case of persistent compilation problems, check the version of the currently used C/C++ compiler (GCC) - should be at leas `4.8.1`; 
-If you are not sure where the file is placed (depends on how `"Arduino Software IDE"` was installed), you can use the search feature within the file system_
+1. Press and hold the control knob
+2. Power up the printer by turning the PSU switch on
+3. Release the control know when you hear a beep
 
-_Name collision for `"LiquidCrystal"` library known from previous versions is now obsolete (so there is no need to delete or rename original file/-s)_
+If done correctly, the LCD screen will show a menu with 5 options.
+- Language
+- Statistics
+- Shipping prep
+- All data
+- All but statistics
 
-#### 2. Source code compilation
-
-**a.** Clone this repository`https://github.com/prusa3d/Prusa-Firmware/` to your local drive.
-
-**b.**<a name="2b"></a> In the subdirectory `"Firmware/variants/"` select the configuration file (`.h`) corresponding to your printer model, make copy named `"Configuration_prusa.h"` (or make simple renaming) and copy it into `"Firmware/"` directory.  
-
-**c.**<a name="2c"></a> In file `"Firmware/config.h"` set LANG_MODE to 0.
-
-**d.** Run `"Arduino IDE"`; select the file `"Firmware.ino"` from the subdirectory `"Firmware/"` at the location, where you placed the source code `File->Open` Make the desired code customizations; **all changes are on your own risk!**  
-
-**e.** Select the target board `"Tools->Board->PrusaResearch Einsy RAMBo"`  
-
-**f.** Run the compilation `Sketch->Verify/Compile`  
-
-**g.** Upload the result code into the connected printer `Sketch->Upload`  
-
-* or you can also save the output code to the file (in so called `HEX`-format) `"Firmware.ino.rambo.hex"`:  `Sketch->ExportCompiledBinary` and then upload it to the printer using the program `"FirmwareUpdater"`  
-_note: this file is created in the directory `"Firmware/"`_  
-
-### Using Linux subsystem under Windows 10 64-bit
-_notes: Script and instructions contributed by 3d-gussner. Use at your own risk. Script downloads Arduino executables outside of Prusa control. Report problems [there.](https://github.com/3d-gussner/Prusa-Firmware/issues) Multi language build is supported._
-- follow the Microsoft guide https://docs.microsoft.com/en-us/windows/wsl/install-win10
-  You can also use the 'prepare_winbuild.ps1' powershell script with Administrator rights
-- Tested versions are at this moment
-  - Ubuntu other may different
-  - After the installation and reboot please open your Ubuntu bash and do following steps
-  - run command `apt-get update`
-  - to install zip run `apt-get install zip`
-  - add few lines at the top of `~/.bashrc` by running `sudo nano ~/.bashrc`
-	
-	export OS="Linux"
-	export JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true"
-	export GPG_TTY=$(tty)
-	
-	use `CRTL-X` to close nano and confirm to write the new entries
-  - restart Ubuntu bash
-Now your Ubuntu subsystem is ready to use the automatic `PF-build.sh` script and compile your firmware correctly
-
-#### Some Tips for Ubuntu
-- Linux is case sensetive so please don't forget to use capital letters where needed, like changing to a directory
-- To change the path to your Prusa-Firmware location you downloaded and unzipped
-  - Example: You files are under `C:\Users\<your-username>\Downloads\Prusa-Firmware-MK3`
-  - use under Ubuntu the following command `cd /mnt/c/Users/<your-username>/Downloads/Prusa-Firmware-MK3`
-    to change to the right folder
-- Unix and windows have different line endings (LF vs CRLF), try dos2unix to convert
-  - This should fix the `"$'\r': command not found"` error
-  - to install run `apt-get install dos2unix`
-- If your Windows isn't in English the Paths may look different
-  Example in other languages
-  - English `/mnt/c/Users/<your-username>/Downloads/Prusa-Firmware-MK3` will be on a German Windows`/mnt/c/Anwender/<your-username>/Downloads/Prusa-Firmware-MK3`
-#### Compile Prusa-firmware with Ubuntu Linux subsystem installed
-- open Ubuntu bash
-- change to your source code folder (case sensitive)
-- run `./PF-build.sh`
-- follow the instructions
-
-### Using Git-bash under Windows 10 64-bit
-_notes: Script and instructions contributed by 3d-gussner. Use at your own risk. Script downloads Arduino executables outside of Prusa control. Report problems [there.](https://github.com/3d-gussner/Prusa-Firmware/issues) Multi language build is supported._
-- Download and install the 64bit Git version https://git-scm.com/download/win
-- Also follow these instructions https://gist.github.com/evanwill/0207876c3243bbb6863e65ec5dc3f058
-- Download and install 7z-zip from its official website https://www.7-zip.org/
-  By default, it is installed under the directory /c/Program\ Files/7-Zip in Windows 10
-- Run `Git-Bash` under Administrator privilege
-- navigate to the directory /c/Program\ Files/Git/mingw64/bin
-- run `ln -s /c/Program\ Files/7-Zip/7z.exe zip.exe`
-- If your Windows isn't in English the Paths may look different
-  Example in other languages
-  - English `/mnt/c/Users/<your-username>/Downloads/Prusa-Firmware-MK3` will be on a German Windows`/mnt/c/Anwender/<your-username>/Downloads/Prusa-Firmware-MK3`
-  - English `ln -s /c/Program\ Files/7-Zip/7z.exe zip.exe` will be on a Spanish Windows `ln -s /c/Archivos\ de\ programa/7-Zip/7z.exe zip.exe`
-#### Compile Prusa-firmware with Git-bash installed
-- open Git-bash
-- change to your source code folder
-- run `bash PF-build.sh`
-- follow the instructions
+Select *All data* and wait for it to complete.
+After that you can continue with calibration.
+If calibration fails in many retries, you may have to edit firmware parameters in calibration sections.
+Whenever a new upload of firmware is done, the factory reset procedure must be repeated!
 
 
-# 3. Automated tests
-## Prerequisites
-* c++11 compiler e.g. g++ 6.3.1
-* cmake
-* build system - ninja or gnu make
-
-## Building
-Create a folder where you want to build tests.
-
-Example:
-
-`cd ..`
-
-`mkdir Prusa-Firmware-test`
-
-Generate build scripts in target folder.
-
-Example:
-
-`cd Prusa-Firmware-test`
-
-`cmake -G "Eclipse CDT4 - Ninja" ../Prusa-Firmware`
-
-or for DEBUG build:
-
-`cmake -G "Eclipse CDT4 - Ninja" -DCMAKE_BUILD_TYPE=Debug ../Prusa-Firmware`
-
-Build it.
-
-Example:
-
-`ninja`
-
-## Running
-`./tests`
-
-# 4. Documentation
-run [doxygen](http://www.doxygen.nl/) in Firmware folder
-or visit https://prusa3d.github.io/Prusa-Firmware-Doc for doxygen generated output
-
-# 5. FAQ
-Q:I built firmware using Arduino and I see "?" instead of numbers in printer user interface.
-
-A:Step 1.c was ommited or you updated Arduino and now platform.txt located somewhere in your user profile is used.
-
-Q:I built firmware using Arduino and printer now speaks Klingon (nonsense characters and symbols are displayed @^#$&*°;~ÿ)
-
-A:Step 2.c was omitted.
-
-Q:What environment does Prusa use to build the firmware in the first place?
-
-A:Our production builds are 99.9% equivalent to https://github.com/prusa3d/Prusa-Firmware#linux this is also easiest way to build as only one step is needed - run single script, which downloads patched Arduino from github, builds using it, then extracts translated strings and creates language variants (for MK2x) or language hex file for external SPI flash (MK3x). But you need Linux or Linux in virtual machine. This is also what happens when you open pull request to our repository - all variants are built by Travis http://travis-ci.org/ (to check for compilation errors). You can see, what is happening in .travis.yml. It would be also possible to get hex built by travis, only deploy step is missing in .travis.yml. You can get inspiration how to deploy hex by travis and how to setup travis in https://github.com/prusa3d/MM-control-01/ repository. Final hex is located in ./lang/firmware.hex Community reproduced this for Windows in https://github.com/prusa3d/Prusa-Firmware#using-linux-subsystem-under-windows-10-64-bit or https://github.com/prusa3d/Prusa-Firmware#using-git-bash-under-windows-10-64-bit .
-
-Q:Why are build instructions for Arduino mess.
-
-Y:We are too lazy to ship proper board definition for Arduino. We plan to swich to cmake + ninja to be inherently multiplatform, easily integrate build tools, suport more IDEs, get 10 times shorter build times and be able to update compiler whenewer we want.
+# Enjoy and happy printing! :)
