@@ -24,6 +24,7 @@ If using different setup than I do, please reconfigure all needed parameters and
 Useful links for TMC2130:
   * https://www.instructables.com/Upgrading-RAMPS-14-With-TMC2130-Stepper-Drivers/
   * https://toms3d.org/2017/12/09/tmc2130-guide/
+  * https://blog.3despana.com/2017/12/20/tutorial-instalacion-y-configuracion-driver-trinamic-tmc2130-en-ramps-y-mks-gen-1-4/
   
 ### Power supply
 * [Original Prusa 12V 240W PSU](https://shop.prusa3d.com/en/mk2mk2s/176-psu-12v-240w.html)
